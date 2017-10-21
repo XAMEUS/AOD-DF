@@ -19,13 +19,13 @@ struct chemins {
     struct tableau *t[2];
 };
 
-struct tableau_sol {
+struct tab_sol {
     size_t len;
     struct tableau *t;
 };
 
-struct tab_solution {
-    struct tableau_sol *t[2];
+struct tab_sol_2d {
+    struct tab_sol *t[2];
 };
 
 struct chemins *lire_fichier(FILE* fichier) {
@@ -51,8 +51,13 @@ void liberer_chemins(struct chemins *data) {
     free(data->t[1]);
 }
 
-void liberer_pre_calc(struct tab_solution *data) {
-    //TODO
+void liberer_pre_calc(struct tab_sol_2d *data) {
+    for(int i = 0; i < 2; i++) {
+        struct tab_sol *cur_i = data->t[i];
+        for(size_t j = 0; j < cur_i->len; j++) free(cur_i->t[j].tab);
+        free(cur_i->t);
+        free(cur_i);
+    }
 }
 
 /*
@@ -60,11 +65,11 @@ Repère selon (P, Q)
 struct chemins pre_calc, res: p représente un côté gauche ou droit
 struct point depart, arrive: x représente les bornes de p
 */
-struct tab_solution frechet_recursif(struct chemins data,
+struct tab_sol_2d frechet_recursif(struct chemins data,
                                      struct point depart,
                                      struct point arrive,
-                                     struct tab_solution pre_calc) {
-    struct tab_solution res = {malloc(sizeof(struct tableau)),
+                                     struct tab_sol_2d pre_calc) {
+    struct tab_sol_2d res = {malloc(sizeof(struct tableau)),
                           malloc(sizeof(struct tableau))};
     res.t[0]->len = arrive.x - depart.x + 1;
     res.t[1]->len = arrive.y - depart.y + 1;
@@ -89,18 +94,18 @@ struct tab_solution frechet_recursif(struct chemins data,
         n_arrive.x = arrive.x;
         n_depart.x = depart.x;
     }
-    struct tab_solution res_a = frechet_recursif(data,
+    struct tab_sol_2d res_a = frechet_recursif(data,
                                                  depart,
                                                  n_arrive,
                                                  pre_calc);
-    struct tab_solution n_pre_calc = {malloc(sizeof(struct tableau)),
+    struct tab_sol_2d n_pre_calc = {malloc(sizeof(struct tableau)),
                                       malloc(sizeof(struct tableau))};
     n_pre_calc.t[!choix]->len = res_a.t[!choix]->len;
     n_pre_calc.t[!choix]->t = res_a.t[!choix]->t;
     n_pre_calc.t[choix]->len = choix * (arrive.x - n_depart.x)
                                + !choix * (arrive.y - n_depart.y) + 1;
     n_pre_calc.t[choix]->t = pre_calc.t[choix]->t + n_depart.x;
-    struct tab_solution res_b = frechet_recursif(data,
+    struct tab_sol_2d res_b = frechet_recursif(data,
                                                  n_depart,
                                                  arrive,
                                                  n_pre_calc);
@@ -116,9 +121,9 @@ struct tab_solution frechet_recursif(struct chemins data,
     return res;
 }
 
-void init_pre_calc(struct tab_solution pre_calc, struct chemins *data) {
+void init_pre_calc(struct tab_sol_2d pre_calc, struct chemins *data) {
     for(int i = 0; i < 2; i++) {
-        struct tableau_sol *actuel = pre_calc.t[i];
+        struct tab_sol *actuel = pre_calc.t[i];
         actuel->len = data->t[i]->len;
         actuel->t = malloc(sizeof(*actuel->t) * actuel->len);
         actuel->t[0].len = 1;
@@ -150,7 +155,7 @@ int main(int argc, char const *argv[]) {
             fclose(input);
             struct point depart = {0, 0};
             struct point arrive = {data->t[0]->len - 1, data->t[1]->len - 1};
-            struct tab_solution pre_calc = {malloc(sizeof(struct tableau)),
+            struct tab_sol_2d pre_calc = {malloc(sizeof(struct tableau)),
                                        malloc(sizeof(struct tableau))};
             init_pre_calc(pre_calc, data);
             frechet_recursif(*data, depart, arrive, pre_calc);
