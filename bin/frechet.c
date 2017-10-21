@@ -89,7 +89,10 @@ struct tab_solution frechet_recursif(struct chemins data,
         n_arrive.x = arrive.x;
         n_depart.x = depart.x;
     }
-    struct tab_solution res_a = frechet_recursif(data, depart, n_arrive, pre_calc);
+    struct tab_solution res_a = frechet_recursif(data,
+                                                 depart,
+                                                 n_arrive,
+                                                 pre_calc);
     struct tab_solution n_pre_calc = {malloc(sizeof(struct tableau)),
                                       malloc(sizeof(struct tableau))};
     n_pre_calc.t[!choix]->len = res_a.t[!choix]->len;
@@ -97,11 +100,14 @@ struct tab_solution frechet_recursif(struct chemins data,
     n_pre_calc.t[choix]->len = choix * (arrive.x - n_depart.x)
                                + !choix * (arrive.y - n_depart.y) + 1;
     n_pre_calc.t[choix]->t = pre_calc.t[choix]->t + n_depart.x;
-    struct tab_solution res_b = frechet_recursif(data, n_depart, arrive, n_pre_calc);
+    struct tab_solution res_b = frechet_recursif(data,
+                                                 n_depart,
+                                                 arrive,
+                                                 n_pre_calc);
     free(n_pre_calc.t[!choix]);
     free(n_pre_calc.t[choix]);
     memcpy(res.t[choix]->t, res_a.t[choix]->t, res_a.t[choix]->len);
-    memcpy(res.t[choix]->t + res_a.t[choix]->len,
+    memcpy(res.t[choix]->t + res_a.t[choix]->len - 1,
            res_b.t[choix]->t, res_b.t[choix]->len);
     memcpy(res.t[!choix]->t, res_b.t[!choix]->t, res.t[!choix]->len);
     liberer_pre_calc(&res_a);
@@ -152,7 +158,10 @@ int main(int argc, char const *argv[]) {
             liberer_chemins(data);
             free(data);
         }
-        else perror("Error: ");
+        else {
+            perror("Error: ");
+            return EXIT_FAILURE;
+        }
     }
     return EXIT_SUCCESS;
 }
