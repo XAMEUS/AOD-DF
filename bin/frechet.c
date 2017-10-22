@@ -189,22 +189,28 @@ void init_pre_calc(struct tab_sol_2d pre_calc, struct chemins *data) {
         actuel->t[0].distance = dEC(data->t[0]->tab[0], data->t[1]->tab[0]);
         actuel->t[0].tab = malloc(sizeof(*actuel->t[0].tab));
         actuel->t[0].tab[0].x = actuel->t[0].tab[0].y = 0;
-        for(size_t j = 1; j < actuel->len; j++) { //TODO chemins faux
-            actuel->t[j].len = 1;
-            actuel->t[j].tab = malloc(sizeof(*actuel->t[j].tab));
+        for(size_t j = 1; j < actuel->len; j++) {
+            actuel->t[j].len =  j+1;
+            actuel->t[j].tab = malloc(sizeof(*actuel->t[j].tab) * actuel->t[j].len);
+            memcpy(actuel->t[j].tab, actuel->t[j-1].tab, sizeof(*actuel->t[j].tab) * j);
             long candidat = dEC(data->t[!i]->tab[0], data->t[i]->tab[j]);
-            if(candidat >= actuel->t[j-1].distance) {
+            if(candidat >= actuel->t[j-1].distance)
                 actuel->t[j].distance = candidat;
-                actuel->t[j].tab[0].x = j * (i == 0);
-                actuel->t[j].tab[0].y = j * (i != 0);
-
-            } else {
+            else
                 actuel->t[j].distance = actuel->t[j-1].distance;
-                actuel->t[j].tab[0] = actuel->t[j-1].tab[0];
-            }
+            actuel->t[j].tab[j].x = j * (i == 0);
+            actuel->t[j].tab[j].y = j * (i != 0);
         }
     }
 }
+
+void print_result(struct tab_sol_2d res) {
+    printf("Distance: %ld\n", res.t[1]->t[res.t[1]->len - 1].distance);
+    printf("Nombre pas: %ld\n", res.t[1]->t[res.t[1]->len - 1].len);
+    for(size_t i=0; i < res.t[1]->t[res.t[1]->len - 1].len; i++)
+        printf("\t %ld %ld\n", res.t[1]->t[res.t[1]->len - 1].tab[i].x + 1,
+                               res.t[1]->t[res.t[1]->len - 1].tab[i].y + 1);
+    }
 
 int main(int argc, char const *argv[]) {
     for(int f = 1; f < argc; f++) {
@@ -219,7 +225,8 @@ int main(int argc, char const *argv[]) {
             struct tab_sol_2d pre_calc = {malloc(sizeof(struct tableau)),
                                           malloc(sizeof(struct tableau))};
             init_pre_calc(pre_calc, data);
-            frechet_recursif(*data, depart, arrive, pre_calc, &res);
+            frechet_iteratif(*data, depart, arrive, pre_calc, &res);
+            print_result(res);
             liberer_pre_calc(&pre_calc);
             liberer_chemins(data);
             free(data);
