@@ -55,7 +55,7 @@ void liberer_chemins(struct chemins *data) {
 void liberer_pre_calc(struct tab_sol_2d *data) {
     for(int i = 0; i < 2; i++) {
         struct tab_sol *cur_i = data->t[i];
-        for(size_t j = 0; j < cur_i->len; j++) free(cur_i->t[j].tab);
+        for(size_t j = 0; j < cur_i->len - i; j++) free(cur_i->t[j].tab);
         free(cur_i->t);
         free(cur_i);
     }
@@ -67,8 +67,10 @@ void frechet_iteratif(struct chemins data,
                       struct tab_sol_2d pre_calc,
                       struct tab_sol_2d *res) {
     struct tableau sols[arrive.y - depart.y + 1][arrive.x - depart.x + 1];
-    for(int i = 0; i < 2 ; i++)
-        for(size_t j = 0; j < pre_calc.t[i]->len; j++) {
+    for(int i = 0; i < 2 ; i++) {
+        size_t borne = 1 + (arrive.y - depart.y) * i + (arrive.x - depart.x) * !i;
+        for(size_t j = 0; j < borne; j++) {
+            printf("&%d %d %d\n", j, i, borne);
             sols[j * i][j * !i].len = pre_calc.t[i]->t[j].len;
             sols[j * i][j * !i].distance = pre_calc.t[i]->t[j].distance;
             sols[j * i][j * !i].tab = malloc(sizeof(*sols[j * i][j * !i].tab)
@@ -77,8 +79,9 @@ void frechet_iteratif(struct chemins data,
                    pre_calc.t[i]->t[j].tab,
                    sizeof(*pre_calc.t[i]->t[j].tab) * sols[j * i][j * !i].len);
         }
-    for(size_t j = depart.y + 1; j <= arrive.y; j++)
-        for(size_t i = depart.x + 1; i <= arrive.x; i++) {
+    }
+    for(size_t j = 1; j <= arrive.y - depart.y; j++)
+        for(size_t i = 1; i <= arrive.x - depart.x; i++) {
             struct tableau *candidat = &sols[j-1][i-1];
             if(candidat->distance >= sols[j-1][i].distance)
                 candidat = &sols[j-1][i];
@@ -99,7 +102,7 @@ void frechet_iteratif(struct chemins data,
         for(size_t i = 1; i < arrive.x - depart.x; i++)
             free(sols[j][i].tab);
     for(int i = 0; i < 2 ; i++) {
-        res->t[i]->len = pre_calc.t[i]->len;
+        res->t[i]->len = 1 + (arrive.y - depart.y) * i + (arrive.x - depart.x) * !i;;
         res->t[i]->t = malloc(sizeof(*res->t[i]->t) * res->t[i]->len);
         for(size_t j = 0; j < res->t[i]->len; j++) {
             size_t Y = i * j + !i * (arrive.y - depart.y);
@@ -124,6 +127,7 @@ void frechet_recursif(struct chemins data,
     printf(">%ld %ld %ld %ld\n", depart.x, depart.y, arrive.x, arrive.y);
     res->t[0]->len = arrive.x - depart.x + 1;
     res->t[1]->len = arrive.y - depart.y + 1;
+    fprintf(stderr, ">>%d\n", res->t[0]->len >= res->t[1]->len);
     if(res->t[0]->len + res->t[1]->len < 8) { //TODO: number?
         frechet_iteratif(data, depart, arrive, pre_calc, res);
         return;
@@ -154,16 +158,23 @@ void frechet_recursif(struct chemins data,
     n_pre_calc.t[!choix]->t = res_a.t[!choix]->t;
     n_pre_calc.t[choix]->len = choix * (arrive.x - n_depart.x)
                                + !choix * (arrive.y - n_depart.y) + 1;
-    n_pre_calc.t[choix]->t = pre_calc.t[choix]->t + n_depart.x;
+    n_pre_calc.t[choix]->t = pre_calc.t[choix]->t +
+                             !choix * n_depart.x +
+                             choix * n_depart.y;
     struct tab_sol_2d res_b = {malloc(sizeof(struct tableau)),
                                malloc(sizeof(struct tableau))};
     frechet_recursif(data, n_depart, arrive, n_pre_calc, &res_b);
     free(n_pre_calc.t[0]);
     free(n_pre_calc.t[1]);
-    memcpy(res->t[choix]->t, res_a.t[choix]->t, res_a.t[choix]->len);
+    memcpy(res->t[choix]->t,
+           res_a.t[choix]->t,
+           sizeof(*res->t[choix]->t) * res_a.t[choix]->len);
     memcpy(res->t[choix]->t + res_a.t[choix]->len - 1,
-           res_b.t[choix]->t, res_b.t[choix]->len);
-    memcpy(res->t[!choix]->t, res_b.t[!choix]->t, res->t[!choix]->len);
+           res_b.t[choix]->t,
+           sizeof(*res->t[choix]->t) * res_b.t[choix]->len);
+    memcpy(res->t[!choix]->t,
+           res_b.t[!choix]->t,
+           sizeof(*res->t[!choix]->t) * res_b.t[!choix]->len);
     liberer_pre_calc(&res_a);
     liberer_pre_calc(&res_b);
     printf("<%ld %ld %ld %ld\n", depart.x, depart.y, arrive.x, arrive.y);
@@ -178,7 +189,7 @@ void init_pre_calc(struct tab_sol_2d pre_calc, struct chemins *data) {
         actuel->t[0].distance = dEC(data->t[0]->tab[0], data->t[1]->tab[0]);
         actuel->t[0].tab = malloc(sizeof(*actuel->t[0].tab));
         actuel->t[0].tab[0].x = actuel->t[0].tab[0].y = 0;
-        for(size_t j = 1; j < actuel->len; j++) {
+        for(size_t j = 1; j < actuel->len; j++) { //TODO chemins faux
             actuel->t[j].len = 1;
             actuel->t[j].tab = malloc(sizeof(*actuel->t[j].tab));
             long candidat = dEC(data->t[!i]->tab[0], data->t[i]->tab[j]);
