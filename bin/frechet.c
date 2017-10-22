@@ -70,7 +70,7 @@ void frechet_iteratif(struct chemins data,
     for(int i = 0; i < 2 ; i++) {
         size_t borne = 1 + (arrive.y - depart.y) * i + (arrive.x - depart.x) * !i;
         for(size_t j = 0; j < borne; j++) {
-            printf("&%d %d %d\n", j, i, borne);
+            printf("&%ld %d %ld\n", j, i, borne);
             sols[j * i][j * !i].len = pre_calc.t[i]->t[j].len;
             sols[j * i][j * !i].distance = pre_calc.t[i]->t[j].distance;
             sols[j * i][j * !i].tab = malloc(sizeof(*sols[j * i][j * !i].tab)
