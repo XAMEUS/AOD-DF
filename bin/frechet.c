@@ -3,6 +3,7 @@
 #include<string.h>
 
 #define max(a,b) (((a)>(b))?(a):(b))
+#define min(a,b) (((a)<(b))?(a):(b))
 #define dEC(a,b) (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)
 
 struct point {
@@ -65,11 +66,49 @@ void frechet_iteratif(struct chemins data,
                       struct point arrive,
                       struct tab_sol_2d pre_calc,
                       struct tab_sol_2d *res) {
-    struct tab_sol sols[arrive.y - depart.y + 1][arrive.x - depart.x + 1];
-    for(size_t i = 0; i < pre_calc.t[0]->len; i++) {
-        // sols[0][i] = ;
+    struct tableau sols[arrive.y - depart.y + 1][arrive.x - depart.x + 1];
+    for(int i = 0; i < 2 ; i++)
+        for(size_t j = 0; j < pre_calc.t[i]->len; j++) {
+            sols[j * i][j * !i].len = pre_calc.t[i]->t[j].len;
+            sols[j * i][j * !i].distance = pre_calc.t[i]->t[j].distance;
+            sols[j * i][j * !i].tab = malloc(sizeof(*sols[j * i][j * !i].tab)
+                                      * sols[j * i][j * !i].len);
+            memcpy(sols[j * i][j * !i].tab,
+                   pre_calc.t[i]->t[j].tab,
+                   sizeof(*pre_calc.t[i]->t[j].tab) * sols[j * i][j * !i].len);
+        }
+    for(size_t j = depart.y + 1; j <= arrive.y; j++)
+        for(size_t i = depart.x + 1; i <= arrive.x; i++) {
+            struct tableau *candidat = &sols[j-1][i-1];
+            if(candidat->distance >= sols[j-1][i].distance)
+                candidat = &sols[j-1][i];
+            if(candidat->distance >= sols[j][i-1].distance)
+                candidat = &sols[j][i-1];
+            sols[j][i].distance = max(candidat->distance,
+                                      dEC(data.t[0]->tab[i],
+                                          data.t[1]->tab[j]));
+            sols[j][i].len = candidat->len + 1;
+            sols[j][i].tab = malloc(sizeof(*sols[j][i].tab) * sols[j][i].len);
+            memcpy(sols[j][i].tab,
+                   candidat->tab,
+                   sizeof(*candidat->tab) * candidat->len);
+            sols[j][i].tab[sols[j][i].len - 1].x = i;
+            sols[j][i].tab[sols[j][i].len - 1].y = j;
+        }
+    for(size_t j = 1; j < arrive.y - depart.y; j++)
+        for(size_t i = 1; i < arrive.x - depart.x; i++)
+            free(sols[j][i].tab);
+    for(int i = 0; i < 2 ; i++) {
+        res->t[i]->len = pre_calc.t[i]->len;
+        res->t[i]->t = malloc(sizeof(*res->t[i]->t) * res->t[i]->len);
+        for(size_t j = 0; j < res->t[i]->len; j++) {
+            size_t Y = i * j + !i * (arrive.y - depart.y);
+            size_t X = !i * j + i * (arrive.x - depart.x);
+            res->t[i]->t[j].len = sols[Y][X].len;
+            res->t[i]->t[j].distance = sols[Y][X].distance;
+            res->t[i]->t[j].tab = sols[Y][X].tab;
+        }
     }
-    //TODO
 }
 
 /*
@@ -86,8 +125,6 @@ void frechet_recursif(struct chemins data,
     res->t[0]->len = arrive.x - depart.x + 1;
     res->t[1]->len = arrive.y - depart.y + 1;
     if(res->t[0]->len + res->t[1]->len < 8) { //TODO: number?
-        res->t[0]->t = malloc(res->t[0]->len * sizeof(*res->t[0]->t)); //TODO: REMOVE
-        res->t[1]->t = malloc(res->t[1]->len * sizeof(*res->t[0]->t)); //TODO: REMOVE
         frechet_iteratif(data, depart, arrive, pre_calc, res);
         return;
     }
@@ -121,8 +158,8 @@ void frechet_recursif(struct chemins data,
     struct tab_sol_2d res_b = {malloc(sizeof(struct tableau)),
                                malloc(sizeof(struct tableau))};
     frechet_recursif(data, n_depart, arrive, n_pre_calc, &res_b);
-    free(n_pre_calc.t[!choix]);
-    free(n_pre_calc.t[choix]);
+    free(n_pre_calc.t[0]);
+    free(n_pre_calc.t[1]);
     memcpy(res->t[choix]->t, res_a.t[choix]->t, res_a.t[choix]->len);
     memcpy(res->t[choix]->t + res_a.t[choix]->len - 1,
            res_b.t[choix]->t, res_b.t[choix]->len);
@@ -177,7 +214,7 @@ int main(int argc, char const *argv[]) {
             free(data);
         }
         else {
-            perror("Error: ");
+            perror("Error ");
             return EXIT_FAILURE;
         }
     }
