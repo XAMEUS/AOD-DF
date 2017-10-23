@@ -75,6 +75,7 @@ res         Valeurs de retour:
                 res->t[0] est la ligne en haut
                 res->t[0] est la ligne à droite
                 res->t[1]->t[res->t[1]->len - 1] est le point d'arrivée;
+                res->t[i]->t et res->t[i]->len doivent être initialisés
 */
 void frechet_iteratif(struct chemins data,
                       struct point depart,
@@ -116,8 +117,8 @@ void frechet_iteratif(struct chemins data,
         for(size_t i = 0; i < arrive.x - depart.x; i++)
             free(sols[j][i].tab);
     for(int i = 0; i < 2 ; i++) {
-        res->t[i]->len = 1 + (arrive.y - depart.y) * i + (arrive.x - depart.x) * !i;;
-        res->t[i]->t = malloc(sizeof(*res->t[i]->t) * res->t[i]->len);
+        // res->t[i]->len = 1 + (arrive.y - depart.y) * i + (arrive.x - depart.x) * !i;;
+        // res->t[i]->t = malloc(sizeof(*res->t[i]->t) * res->t[i]->len);
         for(size_t j = 0; j < res->t[i]->len; j++) {
             size_t Y = i * j + !i * (arrive.y - depart.y);
             size_t X = !i * j + i * (arrive.x - depart.x);
@@ -149,16 +150,18 @@ void frechet_recursif(struct chemins data,
                       struct point arrive,
                       struct tab_sol_2d pre_calc,
                       struct tab_sol_2d *res) {
-    printf(">%ld %ld %ld %ld\n", depart.x, depart.y, arrive.x, arrive.y);
     res->t[0]->len = arrive.x - depart.x + 1;
     res->t[1]->len = arrive.y - depart.y + 1;
-    fprintf(stderr, ">>%d\n", res->t[0]->len >= res->t[1]->len);
+    res->t[0]->t = malloc(res->t[0]->len * sizeof(*res->t[0]->t));
+    res->t[1]->t = malloc(res->t[1]->len * sizeof(*res->t[1]->t));
+    fprintf(stderr,">(%ld %ld) (%ld %ld) iteratif: %d, vertical: %d\n",
+            depart.x, depart.y, arrive.x, arrive.y,
+            res->t[0]->len + res->t[1]->len < 8,
+            res->t[0]->len >= res->t[1]->len);
     if(res->t[0]->len + res->t[1]->len < 8) { //TODO: number?
         frechet_iteratif(data, depart, arrive, pre_calc, res);
         return;
     }
-    res->t[0]->t = malloc(res->t[0]->len * sizeof(*res->t[0]->t));
-    res->t[1]->t = malloc(res->t[1]->len * sizeof(*res->t[0]->t));
 
     int choix = res->t[0]->len >= res->t[1]->len;
     struct point n_arrive, n_depart;
@@ -202,7 +205,7 @@ void frechet_recursif(struct chemins data,
            sizeof(*res->t[!choix]->t) * res_b.t[!choix]->len);
     liberer_pre_calc(&res_a);
     liberer_pre_calc(&res_b);
-    printf("<%ld %ld %ld %ld\n", depart.x, depart.y, arrive.x, arrive.y);
+    printf("<(%ld %ld) (%ld %ld)\n", depart.x, depart.y, arrive.x, arrive.y);
 }
 
 void init_pre_calc(struct tab_sol_2d pre_calc, struct chemins *data) {
