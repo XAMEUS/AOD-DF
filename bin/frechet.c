@@ -55,12 +55,27 @@ void liberer_chemins(struct chemins *data) {
 void liberer_pre_calc(struct tab_sol_2d *data) {
     for(int i = 0; i < 2; i++) {
         struct tab_sol *cur_i = data->t[i];
-        for(size_t j = 0; j < cur_i->len - i; j++) free(cur_i->t[j].tab);
+        for(size_t j = 0; j < cur_i->len; j++) free(cur_i->t[j].tab);
         free(cur_i->t);
         free(cur_i);
     }
 }
-
+/*
+Le repère est selon (P, Q) avec Origine le point d'origine du parcours;
+Arguments:
+data        Les deux chemins du fichier d'entrée;
+depart      Pre_calc correspond à P = depart.x et Q = depart.y;
+arrive      Faire tourner l'alorithme jusqu'à P = arrive.x et Q = arrive.y;
+pre_calc    Valeurs précalculées:
+                pre_calc.t[0] est la ligne en bas
+                pre_calc.t[0] est la ligne à gauche
+                pre_calc.t[0]->t[0] est le point de départ
+                pre_calc.t[i]->len est ignoré;
+res         Valeurs de retour:
+                res->t[0] est la ligne en haut
+                res->t[0] est la ligne à droite
+                res->t[1]->t[res->t[1]->len - 1] est le point d'arrivée;
+*/
 void frechet_iteratif(struct chemins data,
                       struct point depart,
                       struct point arrive,
@@ -69,8 +84,7 @@ void frechet_iteratif(struct chemins data,
     struct tableau sols[arrive.y - depart.y + 1][arrive.x - depart.x + 1];
     for(int i = 0; i < 2 ; i++) {
         size_t borne = 1 + (arrive.y - depart.y) * i + (arrive.x - depart.x) * !i;
-        for(size_t j = 0; j < borne; j++) {
-            printf("&%ld %d %ld\n", j, i, borne);
+        for(size_t j = i; j < borne; j++) {
             sols[j * i][j * !i].len = pre_calc.t[i]->t[j].len;
             sols[j * i][j * !i].distance = pre_calc.t[i]->t[j].distance;
             sols[j * i][j * !i].tab = malloc(sizeof(*sols[j * i][j * !i].tab)
@@ -98,8 +112,8 @@ void frechet_iteratif(struct chemins data,
             sols[j][i].tab[sols[j][i].len - 1].x = i;
             sols[j][i].tab[sols[j][i].len - 1].y = j;
         }
-    for(size_t j = 1; j < arrive.y - depart.y; j++)
-        for(size_t i = 1; i < arrive.x - depart.x; i++)
+    for(size_t j = 0; j < arrive.y - depart.y; j++)
+        for(size_t i = 0; i < arrive.x - depart.x; i++)
             free(sols[j][i].tab);
     for(int i = 0; i < 2 ; i++) {
         res->t[i]->len = 1 + (arrive.y - depart.y) * i + (arrive.x - depart.x) * !i;;
@@ -115,9 +129,20 @@ void frechet_iteratif(struct chemins data,
 }
 
 /*
-Repère selon (P, Q)
-struct chemins pre_calc, res: p représente un côté gauche ou droit
-struct point depart, arrive: x représente les bornes de p
+Le repère est selon (P, Q) avec Origine le point d'origine du parcours;
+Arguments:
+data        Les deux chemins du fichier d'entrée;
+depart      Pre_calc correspond à P = depart.x et Q = depart.y;
+arrive      Faire tourner l'alorithme jusqu'à P = arrive.x et Q = arrive.y;
+pre_calc    Valeurs précalculées:
+                pre_calc.t[0] est la ligne en bas
+                pre_calc.t[0] est la ligne à gauche
+                pre_calc.t[0]->t[0] est le point de départ
+                pre_calc.t[i]->len est ignoré;
+res         Valeurs de retour:
+                res->t[0] est la ligne en haut
+                res->t[0] est la ligne à droite
+                res->t[1]->t[res->t[1]->len - 1] est le point d'arrivée;
 */
 void frechet_recursif(struct chemins data,
                       struct point depart,
@@ -225,9 +250,11 @@ int main(int argc, char const *argv[]) {
             struct tab_sol_2d pre_calc = {malloc(sizeof(struct tableau)),
                                           malloc(sizeof(struct tableau))};
             init_pre_calc(pre_calc, data);
-            frechet_iteratif(*data, depart, arrive, pre_calc, &res);
+            frechet_recursif(*data, depart, arrive, pre_calc, &res);
             print_result(res);
             liberer_pre_calc(&pre_calc);
+            res.t[1]->len --; //TODO enlever déduplication cases
+            liberer_pre_calc(&res);
             liberer_chemins(data);
             free(data);
         }
