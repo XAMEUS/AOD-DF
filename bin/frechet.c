@@ -61,19 +61,19 @@ void liberer_pre_calc(struct tab_sol_2d *data) {
     }
 }
 /*
-Le repère est selon (Q, P) avec Origine le point d'origine du parcours;
+Le repère est selon (P, Q) avec Origine le point d'origine du parcours;
 Arguments:
 data        Les deux chemins du fichier d'entrée (data->t[0] pour P et 1 pour Q);
 depart      Pre_calc correspond à P = depart.x et Q = depart.y;
 arrive      Faire tourner l'alorithme jusqu'à P = arrive.x et Q = arrive.y;
 pre_calc    Valeurs précalculées:
-                pre_calc.t[0] est la ligne à gauche
                 pre_calc.t[0] est la ligne en bas
+                pre_calc.t[1] est la ligne à gauche
                 pre_calc.t[0]->t[0] est le point de départ
                 pre_calc.t[i]->len est ignoré;
 res         Valeurs de retour:
-                res->t[0] est la ligne à droite
                 res->t[0] est la ligne en haut
+                res->t[1] est la ligne à droite
                 res->t[1]->t[res->t[1]->len - 1] est le point d'arrivée;
                 res->t[i]->t et res->t[i]->len doivent être initialisés
 */
@@ -84,15 +84,15 @@ void frechet_iteratif(struct chemins data,
                       struct tab_sol_2d *res) {
     struct tableau sols[arrive.y - depart.y + 1][arrive.x - depart.x + 1];
     for(int i = 0; i < 2 ; i++) {
-        size_t borne = 1 + (arrive.y - depart.y) * i + (arrive.x - depart.x) * !i;
+        size_t borne = 1 + (arrive.y - depart.y) * !i + (arrive.x - depart.x) * i;
         for(size_t j = i; j < borne; j++) {
-            sols[j * i][j * !i].len = pre_calc.t[i]->t[j].len;
-            sols[j * i][j * !i].distance = pre_calc.t[i]->t[j].distance;
-            sols[j * i][j * !i].tab = malloc(sizeof(*sols[j * i][j * !i].tab)
-                                      * sols[j * i][j * !i].len);
-            memcpy(sols[j * i][j * !i].tab,
+            sols[j * !i][j * i].len = pre_calc.t[i]->t[j].len;
+            sols[j * !i][j * i].distance = pre_calc.t[i]->t[j].distance;
+            sols[j * !i][j * i].tab = malloc(sizeof(*sols[j * !i][j * i].tab)
+                                      * sols[j * !i][j * i].len);
+            memcpy(sols[j * !i][j * i].tab,
                    pre_calc.t[i]->t[j].tab,
-                   sizeof(*pre_calc.t[i]->t[j].tab) * sols[j * i][j * !i].len);
+                   sizeof(*pre_calc.t[i]->t[j].tab) * sols[j * !i][j * i].len);
         }
     }
     for(size_t j = 1; j <= arrive.y - depart.y; j++)
@@ -118,8 +118,8 @@ void frechet_iteratif(struct chemins data,
             free(sols[j][i].tab);
     for(int i = 0; i < 2 ; i++) {
         for(size_t j = 0; j < res->t[i]->len; j++) {
-            size_t Y = i * j + !i * (arrive.y - depart.y);
-            size_t X = !i * j + i * (arrive.x - depart.x);
+            size_t Y = !i * j + i * (arrive.y - depart.y);
+            size_t X = i * j + !i * (arrive.x - depart.x);
             res->t[i]->t[j].len = sols[Y][X].len;
             res->t[i]->t[j].distance = sols[Y][X].distance;
             res->t[i]->t[j].tab = sols[Y][X].tab;
@@ -128,19 +128,19 @@ void frechet_iteratif(struct chemins data,
 }
 
 /*
-Le repère est selon (Q, P) avec Origine le point d'origine du parcours;
+Le repère est selon (P, Q) avec Origine le point d'origine du parcours;
 Arguments:
 data        Les deux chemins du fichier d'entrée (data->t[0] pour P et 1 pour Q);
 depart      Pre_calc correspond à P = depart.x et Q = depart.y;
 arrive      Faire tourner l'alorithme jusqu'à P = arrive.x et Q = arrive.y;
 pre_calc    Valeurs précalculées:
-                pre_calc.t[0] est la ligne à gauche
                 pre_calc.t[0] est la ligne en bas
+                pre_calc.t[1] est la ligne à gauche
                 pre_calc.t[0]->t[0] est le point de départ
                 pre_calc.t[i]->len est ignoré;
 res         Valeurs de retour:
-                res->t[0] est la ligne à droite
                 res->t[0] est la ligne en haut
+                res->t[1] est la ligne à droite
                 res->t[1]->t[res->t[1]->len - 1] est le point d'arrivée;
 */
 void frechet_recursif(struct chemins data,
@@ -148,8 +148,8 @@ void frechet_recursif(struct chemins data,
                       struct point arrive,
                       struct tab_sol_2d pre_calc,
                       struct tab_sol_2d *res) {
-    res->t[0]->len = arrive.x - depart.x + 1;
-    res->t[1]->len = arrive.y - depart.y + 1;
+    res->t[0]->len = arrive.y - depart.y + 1;
+    res->t[1]->len = arrive.x - depart.x + 1;
     res->t[0]->t = malloc(res->t[0]->len * sizeof(*res->t[0]->t));
     res->t[1]->t = malloc(res->t[1]->len * sizeof(*res->t[1]->t));
     fprintf(stderr,">(%ld %ld) (%ld %ld) iteratif: %d, horizontal: %d\n",
@@ -178,6 +178,7 @@ void frechet_recursif(struct chemins data,
     struct tab_sol_2d res_a = {malloc(sizeof(struct tableau)),
                                malloc(sizeof(struct tableau))};
     frechet_recursif(data, depart, n_arrive, pre_calc, &res_a);
+    // fprintf(stderr, "#(%d %d) (%d %d), (%d %d)\n", depart.x, depart.y, n_arrive.x, n_arrive);
     struct tab_sol_2d n_pre_calc = {malloc(sizeof(struct tableau)),
                                     malloc(sizeof(struct tableau))};
     n_pre_calc.t[!choix]->len = res_a.t[!choix]->len;
@@ -209,7 +210,7 @@ void frechet_recursif(struct chemins data,
 void init_pre_calc(struct tab_sol_2d pre_calc, struct chemins *data) {
     for(int i = 0; i < 2; i++) {
         struct tab_sol *actuel = pre_calc.t[i];
-        actuel->len = data->t[i]->len;
+        actuel->len = data->t[!i]->len;
         actuel->t = malloc(sizeof(*actuel->t) * actuel->len);
         actuel->t[0].len = 1;
         actuel->t[0].distance = dEC(data->t[0]->tab[0], data->t[1]->tab[0]);
@@ -219,7 +220,7 @@ void init_pre_calc(struct tab_sol_2d pre_calc, struct chemins *data) {
             actuel->t[j].len =  j+1;
             actuel->t[j].tab = malloc(sizeof(*actuel->t[j].tab) * actuel->t[j].len);
             memcpy(actuel->t[j].tab, actuel->t[j-1].tab, sizeof(*actuel->t[j].tab) * j);
-            long candidat = dEC(data->t[!i]->tab[0], data->t[i]->tab[j]);
+            long candidat = dEC(data->t[i]->tab[0], data->t[!i]->tab[j]);
             if(candidat >= actuel->t[j-1].distance)
                 actuel->t[j].distance = candidat;
             else
