@@ -152,7 +152,7 @@ void frechet_recursif(struct chemins data,
     res->t[1]->len = arrive.y - depart.y + 1;
     res->t[0]->t = malloc(res->t[0]->len * sizeof(*res->t[0]->t));
     res->t[1]->t = malloc(res->t[1]->len * sizeof(*res->t[1]->t));
-    fprintf(stderr,">(%ld %ld) (%ld %ld) iteratif: %d, vertical: %d\n",
+    fprintf(stderr,">(%ld %ld) (%ld %ld) iteratif: %d, horizontal: %d\n",
             depart.x, depart.y, arrive.x, arrive.y,
             res->t[0]->len + res->t[1]->len < 8,
             res->t[0]->len >= res->t[1]->len);
