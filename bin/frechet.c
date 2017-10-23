@@ -166,16 +166,16 @@ void frechet_recursif(struct chemins data,
     int choix = res->t[0]->len >= res->t[1]->len;
     struct point n_arrive, n_depart;
     if(choix) {
-        n_arrive.x = (arrive.x + depart.x) / 2;
         n_depart.x = (arrive.x + depart.x) / 2;
-        n_arrive.y = arrive.y;
         n_depart.y = depart.y;
+        n_arrive.x = n_depart.x + 1;
+        n_arrive.y = arrive.y;
     }
     else {
-        n_arrive.y = (arrive.y + depart.y) / 2;
+        n_depart.x = depart.x;
         n_depart.y = (arrive.y + depart.y) / 2;
         n_arrive.x = arrive.x;
-        n_depart.x = depart.x;
+        n_arrive.y = n_depart.y + 1;
     }
     struct tab_sol_2d res_a = {malloc(sizeof(struct tableau)),
                                malloc(sizeof(struct tableau))};
