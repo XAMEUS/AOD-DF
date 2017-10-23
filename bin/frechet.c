@@ -61,19 +61,19 @@ void liberer_pre_calc(struct tab_sol_2d *data) {
     }
 }
 /*
-Le repère est selon (P, Q) avec Origine le point d'origine du parcours;
+Le repère est selon (Q, P) avec Origine le point d'origine du parcours;
 Arguments:
-data        Les deux chemins du fichier d'entrée;
+data        Les deux chemins du fichier d'entrée (data->t[0] pour P et 1 pour Q);
 depart      Pre_calc correspond à P = depart.x et Q = depart.y;
 arrive      Faire tourner l'alorithme jusqu'à P = arrive.x et Q = arrive.y;
 pre_calc    Valeurs précalculées:
-                pre_calc.t[0] est la ligne en bas
                 pre_calc.t[0] est la ligne à gauche
+                pre_calc.t[0] est la ligne en bas
                 pre_calc.t[0]->t[0] est le point de départ
                 pre_calc.t[i]->len est ignoré;
 res         Valeurs de retour:
-                res->t[0] est la ligne en haut
                 res->t[0] est la ligne à droite
+                res->t[0] est la ligne en haut
                 res->t[1]->t[res->t[1]->len - 1] est le point d'arrivée;
                 res->t[i]->t et res->t[i]->len doivent être initialisés
 */
@@ -117,8 +117,6 @@ void frechet_iteratif(struct chemins data,
         for(size_t i = 0; i < arrive.x - depart.x; i++)
             free(sols[j][i].tab);
     for(int i = 0; i < 2 ; i++) {
-        // res->t[i]->len = 1 + (arrive.y - depart.y) * i + (arrive.x - depart.x) * !i;;
-        // res->t[i]->t = malloc(sizeof(*res->t[i]->t) * res->t[i]->len);
         for(size_t j = 0; j < res->t[i]->len; j++) {
             size_t Y = i * j + !i * (arrive.y - depart.y);
             size_t X = !i * j + i * (arrive.x - depart.x);
@@ -130,19 +128,19 @@ void frechet_iteratif(struct chemins data,
 }
 
 /*
-Le repère est selon (P, Q) avec Origine le point d'origine du parcours;
+Le repère est selon (Q, P) avec Origine le point d'origine du parcours;
 Arguments:
-data        Les deux chemins du fichier d'entrée;
+data        Les deux chemins du fichier d'entrée (data->t[0] pour P et 1 pour Q);
 depart      Pre_calc correspond à P = depart.x et Q = depart.y;
 arrive      Faire tourner l'alorithme jusqu'à P = arrive.x et Q = arrive.y;
 pre_calc    Valeurs précalculées:
-                pre_calc.t[0] est la ligne en bas
                 pre_calc.t[0] est la ligne à gauche
+                pre_calc.t[0] est la ligne en bas
                 pre_calc.t[0]->t[0] est le point de départ
                 pre_calc.t[i]->len est ignoré;
 res         Valeurs de retour:
-                res->t[0] est la ligne en haut
                 res->t[0] est la ligne à droite
+                res->t[0] est la ligne en haut
                 res->t[1]->t[res->t[1]->len - 1] est le point d'arrivée;
 */
 void frechet_recursif(struct chemins data,
