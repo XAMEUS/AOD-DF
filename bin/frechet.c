@@ -55,7 +55,7 @@ void liberer_chemins(struct chemins *data) {
 void liberer_pre_calc(struct tab_sol_2d *data) {
     for(int i = 0; i < 2; i++) {
         struct tab_sol *cur_i = data->t[i];
-        for(size_t j = 0; j < cur_i->len - i; j++) free(cur_i->t[j].tab);
+        for(size_t j = 0; j < cur_i->len; j++) free(cur_i->t[j].tab);
         free(cur_i->t);
         free(cur_i);
     }
@@ -69,7 +69,7 @@ void frechet_iteratif(struct chemins data,
     struct tableau sols[arrive.y - depart.y + 1][arrive.x - depart.x + 1];
     for(int i = 0; i < 2 ; i++) {
         size_t borne = 1 + (arrive.y - depart.y) * i + (arrive.x - depart.x) * !i;
-        for(size_t j = 0; j < borne; j++) {
+        for(size_t j = i; j < borne; j++) {
             printf("&%ld %d %ld\n", j, i, borne);
             sols[j * i][j * !i].len = pre_calc.t[i]->t[j].len;
             sols[j * i][j * !i].distance = pre_calc.t[i]->t[j].distance;
@@ -98,8 +98,8 @@ void frechet_iteratif(struct chemins data,
             sols[j][i].tab[sols[j][i].len - 1].x = i;
             sols[j][i].tab[sols[j][i].len - 1].y = j;
         }
-    for(size_t j = 1; j < arrive.y - depart.y; j++)
-        for(size_t i = 1; i < arrive.x - depart.x; i++)
+    for(size_t j = 0; j < arrive.y - depart.y; j++)
+        for(size_t i = 0; i < arrive.x - depart.x; i++)
             free(sols[j][i].tab);
     for(int i = 0; i < 2 ; i++) {
         res->t[i]->len = 1 + (arrive.y - depart.y) * i + (arrive.x - depart.x) * !i;;
@@ -228,6 +228,8 @@ int main(int argc, char const *argv[]) {
             frechet_iteratif(*data, depart, arrive, pre_calc, &res);
             print_result(res);
             liberer_pre_calc(&pre_calc);
+            res.t[1]->len --; //TODO enlever déduplication cases
+            liberer_pre_calc(&res);
             liberer_chemins(data);
             free(data);
         }
