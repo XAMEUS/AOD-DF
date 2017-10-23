@@ -70,7 +70,6 @@ void frechet_iteratif(struct chemins data,
     for(int i = 0; i < 2 ; i++) {
         size_t borne = 1 + (arrive.y - depart.y) * i + (arrive.x - depart.x) * !i;
         for(size_t j = i; j < borne; j++) {
-            printf("&%ld %d %ld\n", j, i, borne);
             sols[j * i][j * !i].len = pre_calc.t[i]->t[j].len;
             sols[j * i][j * !i].distance = pre_calc.t[i]->t[j].distance;
             sols[j * i][j * !i].tab = malloc(sizeof(*sols[j * i][j * !i].tab)
@@ -225,7 +224,7 @@ int main(int argc, char const *argv[]) {
             struct tab_sol_2d pre_calc = {malloc(sizeof(struct tableau)),
                                           malloc(sizeof(struct tableau))};
             init_pre_calc(pre_calc, data);
-            frechet_iteratif(*data, depart, arrive, pre_calc, &res);
+            frechet_recursif(*data, depart, arrive, pre_calc, &res);
             print_result(res);
             liberer_pre_calc(&pre_calc);
             res.t[1]->len --; //TODO enlever déduplication cases
