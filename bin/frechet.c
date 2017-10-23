@@ -178,31 +178,25 @@ void frechet_recursif(struct chemins data,
     struct tab_sol_2d res_a = {malloc(sizeof(struct tableau)),
                                malloc(sizeof(struct tableau))};
     frechet_recursif(data, depart, n_arrive, pre_calc, &res_a);
-    fprintf(stderr, "#(%d %d) (%d %d), (%d %d)\n", depart.x, depart.y, n_arrive.x, n_arrive.y, res_a.t[0]->len, res_a.t[1]->len);
+    fprintf(stderr, "#(%ld %ld) (%ld %ld), (%ld %ld)\n", depart.x, depart.y, n_arrive.x, n_arrive.y, res_a.t[0]->len, res_a.t[1]->len);
     struct tab_sol_2d n_pre_calc = {malloc(sizeof(struct tableau)),
                                     malloc(sizeof(struct tableau))};
-    n_pre_calc.t[!choix]->len = res_a.t[!choix]->len;
-    n_pre_calc.t[!choix]->t = res_a.t[!choix]->t;
-    n_pre_calc.t[choix]->len = choix * (arrive.x - n_depart.x)
-                               + !choix * (arrive.y - n_depart.y) + 1;
-    n_pre_calc.t[choix]->t = pre_calc.t[choix]->t +
-                             !choix * n_depart.x +
-                             choix * n_depart.y;
+    n_pre_calc.t[choix]->len = res_a.t[choix]->len;
+    n_pre_calc.t[choix]->t = res_a.t[choix]->t;
+    n_pre_calc.t[!choix]->len = pre_calc.t[!choix]->len - choix * n_depart.x +
+                                                        !choix * n_depart.y;
+    n_pre_calc.t[!choix]->t = pre_calc.t[!choix]->t +
+                             choix * n_depart.x +
+                             !choix * n_depart.y;
     struct tab_sol_2d res_b = {malloc(sizeof(struct tableau)),
                                malloc(sizeof(struct tableau))};
     frechet_recursif(data, n_depart, arrive, n_pre_calc, &res_b);
-    fprintf(stderr, "#(%d %d) (%d %d), (%d %d)\n", depart.x, depart.y, n_arrive.x, n_arrive.y, res_a.t[0]->len, res_a.t[1]->len);
+    fprintf(stderr, "#(%ld %ld) (%ld %ld), (%ld %ld)\n", depart.x, depart.y, n_arrive.x, n_arrive.y, res_a.t[0]->len, res_a.t[1]->len);
     free(n_pre_calc.t[0]);
     free(n_pre_calc.t[1]);
-    memcpy(res->t[choix]->t,
-           res_a.t[choix]->t,
-           sizeof(*res->t[choix]->t) * res_a.t[choix]->len);
-    memcpy(res->t[choix]->t + res_a.t[choix]->len - 1,
-           res_b.t[choix]->t,
-           sizeof(*res->t[choix]->t) * res_b.t[choix]->len);
-    memcpy(res->t[!choix]->t,
-           res_b.t[!choix]->t,
-           sizeof(*res->t[!choix]->t) * res_b.t[!choix]->len);
+    memcpy(res->t[!choix]->t, res_a.t[!choix]->t, sizeof(*res_a.t[!choix]->t) * res_a.t[!choix]->len);
+    memcpy(res->t[!choix]->t + res_a.t[!choix]->len, res_b.t[!choix]->t, sizeof(*res_b.t[!choix]->t) * res_b.t[!choix]->len);
+    memcpy(res->t[choix]->t, res_b.t[choix]->t, sizeof(*res_b.t[choix]->t) * res_b.t[choix]->len);
     // liberer_pre_calc(&res_a);  //TODO
     // liberer_pre_calc(&res_b);  //TODO
     printf("<(%ld %ld) (%ld %ld)\n", depart.x, depart.y, arrive.x, arrive.y);
