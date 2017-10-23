@@ -83,9 +83,9 @@ void frechet_iteratif(struct chemins data,
     for(size_t j = 1; j <= arrive.y - depart.y; j++)
         for(size_t i = 1; i <= arrive.x - depart.x; i++) {
             struct tableau *candidat = &sols[j-1][i-1];
-            if(candidat->distance >= sols[j-1][i].distance)
+            if(candidat->distance > sols[j-1][i].distance)
                 candidat = &sols[j-1][i];
-            if(candidat->distance >= sols[j][i-1].distance)
+            if(candidat->distance > sols[j][i-1].distance)
                 candidat = &sols[j][i-1];
             sols[j][i].distance = max(candidat->distance,
                                       dEC(data.t[0]->tab[i],
