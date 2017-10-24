@@ -84,17 +84,17 @@ void frechet_iteratif(struct chemins data,
                       struct tab_sol_2d *res) {
     struct tableau sols[arrive.y - depart.y + 1][arrive.x - depart.x + 1];
     for(int i = 0; i < 2 ; i++) {
-        size_t borne = 1 + (arrive.y - depart.y) * !i + (arrive.x - depart.x) * i;
+        size_t borne = 1 + (arrive.y - depart.y) * i + (arrive.x - depart.x) * !i;
         for(size_t j = i; j < borne; j++) {
-            sols[j * !i][j * i].len = pre_calc.t[i]->t[j].len;
-            sols[j * !i][j * i].distance = pre_calc.t[i]->t[j].distance;
-            sols[j * !i][j * i].tab = malloc(sizeof(*sols[j * !i][j * i].tab)
-                                      * sols[j * !i][j * i].len);
-            memcpy(sols[j * !i][j * i].tab,
+            sols[j * i][j * !i].len = pre_calc.t[i]->t[j].len;
+            sols[j * i][j * !i].distance = pre_calc.t[i]->t[j].distance;
+            sols[j * i][j * !i].tab = malloc(sizeof(*sols[j * i][j * !i].tab)
+                                             * sols[j * i][j * !i].len);
+            memcpy(sols[j * i][j * !i].tab,
                    pre_calc.t[i]->t[j].tab,
-                   sizeof(*pre_calc.t[i]->t[j].tab) * sols[j * !i][j * i].len);
+                   sizeof(*pre_calc.t[i]->t[j].tab) * sols[j * i][j * !i].len);
+            }
         }
-    }
     for(size_t j = 1; j <= arrive.y - depart.y; j++)
         for(size_t i = 1; i <= arrive.x - depart.x; i++) {
             struct tableau *candidat = &sols[j-1][i-1];
@@ -118,8 +118,8 @@ void frechet_iteratif(struct chemins data,
             free(sols[j][i].tab);
     for(int i = 0; i < 2 ; i++) {
         for(size_t j = 0; j < res->t[i]->len; j++) {
-            size_t Y = !i * j + i * (arrive.y - depart.y);
-            size_t X = i * j + !i * (arrive.x - depart.x);
+            size_t Y = i * j + !i * (arrive.y - depart.y);
+            size_t X = !i * j + i * (arrive.x - depart.x);
             res->t[i]->t[j].len = sols[Y][X].len;
             res->t[i]->t[j].distance = sols[Y][X].distance;
             res->t[i]->t[j].tab = sols[Y][X].tab;
@@ -148,20 +148,20 @@ void frechet_recursif(struct chemins data,
                       struct point arrive,
                       struct tab_sol_2d pre_calc,
                       struct tab_sol_2d *res) {
-    res->t[0]->len = arrive.y - depart.y + 1;
-    res->t[1]->len = arrive.x - depart.x + 1;
+    res->t[0]->len = arrive.x - depart.x + 1;
+    res->t[1]->len = arrive.y - depart.y + 1;
     res->t[0]->t = malloc(res->t[0]->len * sizeof(*res->t[0]->t));
     res->t[1]->t = malloc(res->t[1]->len * sizeof(*res->t[1]->t));
     fprintf(stderr,">(%ld %ld) (%ld %ld) iteratif: %d, vertical: %d\n",
             depart.x, depart.y, arrive.x, arrive.y,
             res->t[0]->len + res->t[1]->len < 8,
-            res->t[0]->len <= res->t[1]->len);
+            res->t[0]->len >= res->t[1]->len);
     if(res->t[0]->len + res->t[1]->len < 8) { //TODO: number?
         frechet_iteratif(data, depart, arrive, pre_calc, res);
         return;
     }
 
-    int choix = res->t[0]->len <= res->t[1]->len;
+    int choix = res->t[0]->len >= res->t[1]->len;
     struct point n_arrive, n_depart;
     if(choix) {
         n_depart.x = (arrive.x + depart.x) / 2;
@@ -181,11 +181,11 @@ void frechet_recursif(struct chemins data,
     fprintf(stderr, "#(%ld %ld) (%ld %ld), (%ld %ld)\n", depart.x, depart.y, n_arrive.x, n_arrive.y, res_a.t[0]->len, res_a.t[1]->len);
     struct tab_sol_2d n_pre_calc = {malloc(sizeof(struct tableau)),
                                     malloc(sizeof(struct tableau))};
-    n_pre_calc.t[!choix]->len = res_a.t[!choix]->len;
-    n_pre_calc.t[!choix]->t = res_a.t[!choix]->t;
-    n_pre_calc.t[choix]->len = pre_calc.t[choix]->len - choix * n_depart.x -
+    n_pre_calc.t[choix]->len = res_a.t[choix]->len;
+    n_pre_calc.t[choix]->t = res_a.t[choix]->t;
+    n_pre_calc.t[!choix]->len = pre_calc.t[!choix]->len - choix * n_depart.x -
                                                         !choix * n_depart.y;
-    n_pre_calc.t[choix]->t = pre_calc.t[choix]->t +
+    n_pre_calc.t[!choix]->t = pre_calc.t[!choix]->t +
                              choix * (n_depart.x - depart.x) +
                              !choix * (n_depart.y - depart.y);
     struct tab_sol_2d res_b = {malloc(sizeof(struct tableau)),
@@ -195,17 +195,17 @@ void frechet_recursif(struct chemins data,
     free(n_pre_calc.t[0]);
     free(n_pre_calc.t[1]);
     memcpy(res->t[!choix]->t, res_a.t[!choix]->t, sizeof(*res_a.t[!choix]->t) * res_a.t[!choix]->len);
-    memcpy(res->t[!choix]->t + res_a.t[!choix]->len, res_b.t[!choix]->t, sizeof(*res_b.t[!choix]->t) * res_b.t[!choix]->len);
+    memcpy(res->t[!choix]->t + res_a.t[!choix]->len - 1, res_b.t[!choix]->t, sizeof(*res_b.t[!choix]->t) * res_b.t[!choix]->len);
     memcpy(res->t[choix]->t, res_b.t[choix]->t, sizeof(*res_b.t[choix]->t) * res_b.t[choix]->len);
-    // liberer_pre_calc(&res_a);  //TODO
-    // liberer_pre_calc(&res_b);  //TODO
+    liberer_pre_calc(&res_a);  //TODO
+    liberer_pre_calc(&res_b);  //TODO
     printf("<(%ld %ld) (%ld %ld)\n", depart.x, depart.y, arrive.x, arrive.y);
 }
 
 void init_pre_calc(struct tab_sol_2d pre_calc, struct chemins *data) {
     for(int i = 0; i < 2; i++) {
         struct tab_sol *actuel = pre_calc.t[i];
-        actuel->len = data->t[!i]->len;
+        actuel->len = data->t[i]->len;
         actuel->t = malloc(sizeof(*actuel->t) * actuel->len);
         actuel->t[0].len = 1;
         actuel->t[0].distance = dEC(data->t[0]->tab[0], data->t[1]->tab[0]);
@@ -215,7 +215,7 @@ void init_pre_calc(struct tab_sol_2d pre_calc, struct chemins *data) {
             actuel->t[j].len =  j+1;
             actuel->t[j].tab = malloc(sizeof(*actuel->t[j].tab) * actuel->t[j].len);
             memcpy(actuel->t[j].tab, actuel->t[j-1].tab, sizeof(*actuel->t[j].tab) * j);
-            long candidat = dEC(data->t[i]->tab[0], data->t[!i]->tab[j]);
+            long candidat = dEC(data->t[!i]->tab[0], data->t[i]->tab[j]);
             if(candidat >= actuel->t[j-1].distance)
                 actuel->t[j].distance = candidat;
             else
