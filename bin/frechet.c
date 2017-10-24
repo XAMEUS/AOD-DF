@@ -257,7 +257,7 @@ int main(int argc, char const *argv[]) {
             #endif
             char fname[128];
             strcpy(fname, argv[f]);
-            strcat(fname, ".out");
+            strcat(fname, ".out"); //TODO remove .in
             FILE *out = fopen(fname, "w");
             ecrire_fichier(out, res);
             fclose(out);

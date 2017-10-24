@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 # extraction de l'archive et compilation : le Makefile doit se trouver directement dans le répertoire TPfrechet, et le fichier exécutable obtenu doit se trouver dans le répertoire TPfrechet/bin/, et s'intituler "frechet" ; autrement dit, le make doit construire le fichier TPfrechet/bin/frechet qui sera exécuté par la suite.
 
 tar -xf ./TPfrechet.tgz
@@ -47,10 +49,3 @@ cd ..
 ./verif_solution ./inoutfiles/verif2
 ./verif_solution ./inoutfiles/verif3
 ./verif_solution ./inoutfiles/verif4
-
-
-
-
-
-
-
