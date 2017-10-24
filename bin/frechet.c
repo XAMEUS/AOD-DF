@@ -273,7 +273,12 @@ int main(int argc, char const *argv[]) {
             #if F_DEBUG >= 1
                 print_result(res);
             #endif
-            // ecrire_fichier(out, res); // tout doux
+            char fname[128];
+            strcpy(fname, argv[f]);
+            strcat(fname, ".out"); //TODO remove .in
+            FILE *out = fopen(fname, "w");
+            ecrire_fichier(out, res);
+            fclose(out);
             liberer_deux_tab_l_pts(pre_calc);
             free(pre_calc.t[0]->t);
             free(pre_calc.t[0]);
