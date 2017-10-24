@@ -1,33 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
-
-#define max(a,b) (((a)>(b))?(a):(b))
-#define min(a,b) (((a)<(b))?(a):(b))
-#define dEC(a,b) (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)
-
-struct point {
-    long x;
-    long y;
-};
-
-struct tableau {
-    size_t len, distance;
-    struct point *tab;
-};
-
-struct chemins {
-    struct tableau *t[2];
-};
-
-struct tab_sol {
-    size_t len;
-    struct tableau *t;
-};
-
-struct tab_sol_2d {
-    struct tab_sol *t[2];
-};
+#include "frechet.h"
 
 struct chemins *lire_fichier(FILE* fichier) {
     struct chemins *data = malloc(sizeof(struct chemins));
@@ -55,7 +29,8 @@ void liberer_chemins(struct chemins *data) {
 void liberer_pre_calc(struct tab_sol_2d *data) {
     for(int i = 0; i < 2; i++) {
         struct tab_sol *cur_i = data->t[i];
-        for(size_t j = 0; j < cur_i->len; j++) free(cur_i->t[j].tab);
+        for(size_t j = 0; j < cur_i->len; j++) {free(cur_i->t[j].tab);
+            fprintf(stderr, "%d %ld\n", i, j); }
         free(cur_i->t);
         free(cur_i);
     }
@@ -156,7 +131,7 @@ void frechet_recursif(struct chemins data,
             depart.x, depart.y, arrive.x, arrive.y,
             res->t[0]->len + res->t[1]->len < 8,
             res->t[0]->len >= res->t[1]->len);
-    if(res->t[0]->len + res->t[1]->len < 8) { //TODO: number?
+    if(res->t[0]->len * res->t[1]->len < 8000) { //TODO: number?
         frechet_iteratif(data, depart, arrive, pre_calc, res);
         return;
     }
