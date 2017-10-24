@@ -209,6 +209,15 @@ void print_result(struct tab_sol_2d res) {
                                res.t[1]->t[res.t[1]->len - 1].tab[i].y + 1);
     }
 
+void ecrire_fichier(FILE *out, struct tab_sol_2d res) {
+    fprintf(out, "%ld\n", res.t[1]->t[res.t[1]->len - 1].distance);
+    fprintf(out, "%ld\n", res.t[1]->t[res.t[1]->len - 1].len);
+    for(size_t i=0; i < res.t[1]->t[res.t[1]->len - 1].len; i++)
+        fprintf(out, "%ld %ld ", res.t[1]->t[res.t[1]->len - 1].tab[i].x + 1,
+                               res.t[1]->t[res.t[1]->len - 1].tab[i].y + 1);
+}
+
+
 int main(int argc, char const *argv[]) {
     for(int f = 1; f < argc; f++) {
         FILE *input = fopen(argv[f], "r");
@@ -224,6 +233,7 @@ int main(int argc, char const *argv[]) {
             init_pre_calc(pre_calc, data);
             frechet_recursif(*data, depart, arrive, pre_calc, &res);
             print_result(res);
+            // ecrire_fichier(out, res); // tout doux
             liberer_pre_calc(&pre_calc);
             res.t[1]->len --; //TODO enlever déduplication cases
             liberer_pre_calc(&res);
