@@ -1,6 +1,8 @@
 #ifndef FRECHET
 #define FRECHET
 
+#define F_DEBUG 0
+
 #define max(a,b) (((a)>(b))?(a):(b))
 #define min(a,b) (((a)<(b))?(a):(b))
 #define dEC(a,b) (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)
