@@ -255,7 +255,12 @@ int main(int argc, char const *argv[]) {
             #if F_DEBUG >= 1
                 print_result(res);
             #endif
-            // ecrire_fichier(out, res); // tout doux
+            char fname[128];
+            strcpy(fname, argv[f]);
+            strcat(fname, ".out");
+            FILE *out = fopen(fname, "w");
+            ecrire_fichier(out, res);
+            fclose(out);
             liberer_pre_calc(&pre_calc, 0, 2);
             res.t[1]->len --;
             liberer_pre_calc(&res, 0, 2);
