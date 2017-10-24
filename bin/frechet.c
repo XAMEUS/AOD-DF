@@ -70,7 +70,6 @@ void frechet_iteratif(chemins data,
     }
     for(size_t j = 1; j <= arrive.y - depart.y; j++)
         for(size_t i = 1; i <= arrive.x - depart.x; i++) {
-            printf("%d %d\n", i, j);
             sols[j][i] = malloc(sizeof(*sols[j][i]));
             sols[j][i]->n = sols[j-1][i-1];
             if(sols[j][i]->n->distance > sols[j-1][i]->distance)
@@ -126,52 +125,60 @@ void frechet_recursif(chemins data,
         frechet_iteratif(data, depart, arrive, pre_calc, res);
         return;
     }
-    // #if F_DEBUG > 1
-    // fprintf(stderr,">(%ld %ld) (%ld %ld) récursif, vertical: %d\n",
-    //         depart.x, depart.y, arrive.x, arrive.y,
-    //         res->t[0]->len >= res->t[1]->len);
-    // #endif
-    //
-    // int choix = res->t[0]->len >= res->t[1]->len;
-    // point n_arrive, n_depart;
-    // if(choix) {
-    //     n_depart.x = (arrive.x + depart.x) / 2;
-    //     n_depart.y = depart.y;
-    //     n_arrive.x = n_depart.x;
-    //     n_arrive.y = arrive.y;
-    // }
-    // else {
-    //     n_depart.x = depart.x;
-    //     n_depart.y = (arrive.y + depart.y) / 2;
-    //     n_arrive.x = arrive.x;
-    //     n_arrive.y = n_depart.y;
-    // }
-    // deux_tab_sol_2d res_a = {malloc(sizeof(tab_pts)),
-    //                            malloc(sizeof(tab_pts))};
-    // frechet_recursif(data, depart, n_arrive, pre_calc, &res_a);
-    // deux_tab_sol_2d n_pre_calc = {malloc(sizeof(tab_pts)),
-    //                                 malloc(sizeof(tab_pts))};
-    // n_pre_calc.t[choix]->len = res_a.t[choix]->len;
-    // n_pre_calc.t[choix]->t = res_a.t[choix]->t;
-    // n_pre_calc.t[!choix]->len = pre_calc.t[!choix]->len - choix * n_depart.x -
-    //                                                     !choix * n_depart.y;
-    // n_pre_calc.t[!choix]->t = pre_calc.t[!choix]->t +
-    //                          choix * (n_depart.x - depart.x) +
-    //                          !choix * (n_depart.y - depart.y);
-    // deux_tab_sol_2d res_b = {malloc(sizeof(tab_pts)),
-    //                            malloc(sizeof(tab_pts))};
-    // frechet_recursif(data, n_depart, arrive, n_pre_calc, &res_b);
+    #if F_DEBUG > 1
+    fprintf(stderr,">(%ld %ld) (%ld %ld) récursif, vertical: %d\n",
+            depart.x, depart.y, arrive.x, arrive.y,
+            res->t[0]->len >= res->t[1]->len);
+    #endif
+
+    int choix = res->t[0]->len >= res->t[1]->len;
+    point n_arrive, n_depart;
+    if(choix) {
+        n_depart.x = (arrive.x + depart.x) / 2;
+        n_depart.y = depart.y;
+        n_arrive.x = n_depart.x;
+        n_arrive.y = arrive.y;
+    }
+    else {
+        n_depart.x = depart.x;
+        n_depart.y = (arrive.y + depart.y) / 2;
+        n_arrive.x = arrive.x;
+        n_arrive.y = n_depart.y;
+    }
+    deux_tab_l_pts res_a = {malloc(sizeof(tab_l_pts)),
+                            malloc(sizeof(tab_l_pts))}; //TODO voir
+    frechet_recursif(data, depart, n_arrive, pre_calc, &res_a);
+    deux_tab_l_pts n_pre_calc = {malloc(sizeof(tab_l_pts)),
+                                 malloc(sizeof(tab_l_pts))}; //TODO voir
+    n_pre_calc.t[choix]->len = res_a.t[choix]->len;
+    n_pre_calc.t[choix]->t = res_a.t[choix]->t;
+    n_pre_calc.t[!choix]->len = pre_calc.t[!choix]->len - choix * n_depart.x -
+                                                        !choix * n_depart.y;
+    n_pre_calc.t[!choix]->t = pre_calc.t[!choix]->t +
+                             choix * (n_depart.x - depart.x) +
+                             !choix * (n_depart.y - depart.y);
+    for(int i = 0; i < 2; i++)
+        for (size_t j = 0; j < n_pre_calc.t[i]->len; j++)
+            n_pre_calc.t[i]->t[j]->cpt++;
+    deux_tab_l_pts res_b = {malloc(sizeof(tab_l_pts)),
+                            malloc(sizeof(tab_l_pts))}; //TODO voir
+    frechet_recursif(data, n_depart, arrive, n_pre_calc, &res_b);
+    memcpy(res->t[!choix]->t,
+           res_a.t[!choix]->t,
+           sizeof(*res_a.t[!choix]->t) * res_a.t[!choix]->len);
+    memcpy(res->t[!choix]->t + res_a.t[!choix]->len - 1,
+           res_b.t[!choix]->t,
+           sizeof(*res_b.t[!choix]->t) * res_b.t[!choix]->len);
+    memcpy(res->t[choix]->t,
+           res_b.t[choix]->t,
+           sizeof(*res_b.t[choix]->t) * res_b.t[choix]->len);
+    for(size_t i = 0; i < res->t[0]->len; i++)
+        res->t[0]->t[i]->cpt++;
+    for(size_t i = 0; i < res->t[1]->len; i++)
+        res->t[1]->t[i]->cpt++;
+    //TODO FREE
     // free(n_pre_calc.t[0]);
     // free(n_pre_calc.t[1]);
-    // memcpy(res->t[!choix]->t,
-    //        res_a.t[!choix]->t,
-    //        sizeof(*res_a.t[!choix]->t) * res_a.t[!choix]->len);
-    // memcpy(res->t[!choix]->t + res_a.t[!choix]->len - 1,
-    //        res_b.t[!choix]->t,
-    //        sizeof(*res_b.t[!choix]->t) * res_b.t[!choix]->len);
-    // memcpy(res->t[choix]->t,
-    //        res_b.t[choix]->t,
-    //        sizeof(*res_b.t[choix]->t) * res_b.t[choix]->len);
     // liberer_pre_calc(&res_a, choix, choix + 1);
     // free(res_a.t[!choix]->t);
     // free(res_a.t[!choix]);
@@ -179,10 +186,10 @@ void frechet_recursif(chemins data,
     // free(res_b.t[0]);
     // free(res_b.t[1]->t);
     // free(res_b.t[1]);
-    // #if F_DEBUG > 1
-    //     fprintf(stderr, "<(%ld %ld) (%ld %ld)\n",
-    //             depart.x, depart.y, arrive.x, arrive.y);
-    // #endif
+    #if F_DEBUG > 1
+        fprintf(stderr, "<(%ld %ld) (%ld %ld)\n",
+                depart.x, depart.y, arrive.x, arrive.y);
+    #endif
 }
 
 void init_pre_calc(deux_tab_l_pts pre_calc, chemins *data) {
@@ -218,11 +225,10 @@ void init_pre_calc(deux_tab_l_pts pre_calc, chemins *data) {
 }
 
 void print_result(deux_tab_l_pts res) {
-    // printf("Distance: %ld\n", res.t[1]->t[res.t[1]->len - 1].distance);
-    // printf("Nombre pas: %ld\n", res.t[1]->t[res.t[1]->len - 1].len);
-    // for(size_t i=0; i < res.t[1]->t[res.t[1]->len - 1].len; i++)
-    //     printf("\t %ld %ld\n", res.t[1]->t[res.t[1]->len - 1].t[i].x + 1,
-    //                            res.t[1]->t[res.t[1]->len - 1].t[i].y + 1);
+    l_pts* tete = res.t[1]->t[res.t[1]->len - 1];
+    printf("Distance: %ld\n", tete->distance);
+    for(l_pts* i = tete; i != NULL; i = i->n)
+        printf("\t%ld %ld\n", i->x + 1, i->y + 1);
 }
 
 void ecrire_fichier(FILE *out, deux_tab_l_pts res) {
