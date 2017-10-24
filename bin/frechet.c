@@ -103,15 +103,15 @@ void frechet_iteratif(struct chemins data,
             if(candidat->distance > sols[j][i-1].distance)
                 candidat = &sols[j][i-1];
             sols[j][i].distance = max(candidat->distance,
-                                      dEC(data.t[0]->tab[i],
-                                          data.t[1]->tab[j]));
+                                      dEC(data.t[0]->tab[i + depart.x],
+                                          data.t[1]->tab[j + depart.y]));
             sols[j][i].len = candidat->len + 1;
             sols[j][i].tab = malloc(sizeof(*sols[j][i].tab) * sols[j][i].len);
             memcpy(sols[j][i].tab,
                    candidat->tab,
                    sizeof(*candidat->tab) * candidat->len);
-            sols[j][i].tab[sols[j][i].len - 1].x = i;
-            sols[j][i].tab[sols[j][i].len - 1].y = j;
+            sols[j][i].tab[sols[j][i].len - 1].x = depart.x + i;
+            sols[j][i].tab[sols[j][i].len - 1].y = depart.y + j;
         }
     for(size_t j = 0; j < arrive.y - depart.y; j++)
         for(size_t i = 0; i < arrive.x - depart.x; i++)
@@ -197,8 +197,8 @@ void frechet_recursif(struct chemins data,
     memcpy(res->t[!choix]->t, res_a.t[!choix]->t, sizeof(*res_a.t[!choix]->t) * res_a.t[!choix]->len);
     memcpy(res->t[!choix]->t + res_a.t[!choix]->len - 1, res_b.t[!choix]->t, sizeof(*res_b.t[!choix]->t) * res_b.t[!choix]->len);
     memcpy(res->t[choix]->t, res_b.t[choix]->t, sizeof(*res_b.t[choix]->t) * res_b.t[choix]->len);
-    liberer_pre_calc(&res_a);  //TODO
-    liberer_pre_calc(&res_b);  //TODO
+    // liberer_pre_calc(&res_a);  //TODO
+    // liberer_pre_calc(&res_b);  //TODO
     printf("<(%ld %ld) (%ld %ld)\n", depart.x, depart.y, arrive.x, arrive.y);
 }
 
