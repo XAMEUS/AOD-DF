@@ -1,33 +1,33 @@
 #ifndef FRECHET
 #define FRECHET
 
-#define F_DEBUG 0
+#define F_DEBUG 1
 
 #define max(a,b) (((a)>(b))?(a):(b))
 #define min(a,b) (((a)<(b))?(a):(b))
 #define dEC(a,b) (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)
 
-struct point {
+typedef struct point {
     long x;
     long y;
-};
+} point;
 
-struct tableau {
+typedef struct tab_pts {
     size_t len, distance;
-    struct point *tab;
-};
+    point *t;
+} tab_pts;
 
-struct chemins {
-    struct tableau *t[2];
-};
+typedef struct chemins {
+    tab_pts *t[2];
+} chemins;
 
-struct tab_sol {
+typedef struct tab_tab_pts {
     size_t len;
-    struct tableau *t;
-};
+    tab_pts *t;
+} tab_tab_pts;
 
-struct tab_sol_2d {
-    struct tab_sol *t[2];
-};
+typedef struct tab_sol_2d {
+    tab_tab_pts *t[2];
+} deux_tab_sol_2d;
 
 #endif
