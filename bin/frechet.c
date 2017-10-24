@@ -20,20 +20,30 @@ chemins *lire_fichier(FILE* fichier) {
 }
 
 void liberer_chemins(chemins *data) {
-    // free(data->t[0]->t);
-    // free(data->t[0]);
-    // free(data->t[1]->t);
-    // free(data->t[1]);
+    free(data->t[0]->t);
+    free(data->t[0]);
+    free(data->t[1]->t);
+    free(data->t[1]);
 }
 
-void liberer_pre_calc(deux_tab_l_pts *data, int debut, int fin) {
-    // for(int i = debut; i < fin; i++) {
-    //     tab_tab_pts *cur_i = data->t[i];
-    //     for(size_t j = 0; j < cur_i->len; j++)
-    //         free(cur_i->t[j].t);
-    //     free(cur_i->t);
-    //     free(cur_i);
-    // }
+void liberer_tab_l_pts(l_pts **pp, size_t len) {
+    for(size_t i = 0; i < len; i++) {
+        for(l_pts *p = pp[i]; p != NULL; p = p->n) {
+            if(--p->cpt == 0)
+                while(!p->cpt) {
+                    l_pts *n = p->n;
+                    free(p);
+                    if(n == NULL || --n->cpt > 0) break;
+                    p = n;
+                }
+            break;
+        }
+    }
+}
+
+void liberer_deux_tab_l_pts(deux_tab_l_pts res) {
+    liberer_tab_l_pts(res.t[0]->t, res.t[0]->len);
+    liberer_tab_l_pts(res.t[1]->t, res.t[1]->len);
 }
 /*
 Le repère est selon (P, Q) avec Origine le point d'origine du parcours;
@@ -65,8 +75,10 @@ void frechet_iteratif(chemins data,
     for(int i = 0; i < 2 ; i++) {
         size_t borne = 1 + (arrive.y - depart.y) * i +
                            (arrive.x - depart.x) * !i;
-        for(size_t j = i; j < borne; j++)
+        for(size_t j = i; j < borne; j++) {
             sols[j * i][j * !i] = pre_calc.t[i]->t[j];
+            pre_calc.t[i]->t[j]->cpt++;
+        }
     }
     for(size_t j = 1; j <= arrive.y - depart.y; j++)
         for(size_t i = 1; i <= arrive.x - depart.x; i++) {
@@ -84,16 +96,16 @@ void frechet_iteratif(chemins data,
             sols[j][i]->x = depart.x + i;
             sols[j][i]->y = depart.y + j;
         }
-    // for(size_t j = 0; j < arrive.y - depart.y; j++) //TODO FREE
-    //     for(size_t i = 0; i < arrive.x - depart.x; i++)
-    //         free(sols[j][i].t);
     for(int i = 0; i < 2 ; i++) {
         for(size_t j = 0; j < res->t[i]->len; j++) {
             size_t Y = i * j + !i * (arrive.y - depart.y);
             size_t X = !i * j + i * (arrive.x - depart.x);
             res->t[i]->t[j] = sols[Y][X];
+            sols[Y][X]->cpt++;
         }
     }
+    for(size_t j = 0; j < arrive.y - depart.y + 1; j++)
+        liberer_tab_l_pts(sols[j], arrive.x - depart.x + 1);
 }
 
 /*
@@ -121,7 +133,7 @@ void frechet_recursif(chemins data,
     res->t[1]->len = arrive.y - depart.y + 1;
     res->t[0]->t = malloc(res->t[0]->len * sizeof(*res->t[0]->t));
     res->t[1]->t = malloc(res->t[1]->len * sizeof(*res->t[1]->t));
-    if(res->t[0]->len * res->t[1]->len < 200) {
+    if(res->t[0]->len * res->t[1]->len < 300) {
         frechet_iteratif(data, depart, arrive, pre_calc, res);
         return;
     }
@@ -152,8 +164,9 @@ void frechet_recursif(chemins data,
                                  malloc(sizeof(tab_l_pts))}; //TODO voir
     n_pre_calc.t[choix]->len = res_a.t[choix]->len;
     n_pre_calc.t[choix]->t = res_a.t[choix]->t;
-    n_pre_calc.t[!choix]->len = pre_calc.t[!choix]->len - choix * n_depart.x -
-                                                        !choix * n_depart.y;
+    n_pre_calc.t[!choix]->len = pre_calc.t[!choix]->len -
+                                choix * (n_depart.x - depart.x) -
+                                !choix * (n_depart.y - depart.y);
     n_pre_calc.t[!choix]->t = pre_calc.t[!choix]->t +
                              choix * (n_depart.x - depart.x) +
                              !choix * (n_depart.y - depart.y);
@@ -176,16 +189,19 @@ void frechet_recursif(chemins data,
         res->t[0]->t[i]->cpt++;
     for(size_t i = 0; i < res->t[1]->len; i++)
         res->t[1]->t[i]->cpt++;
-    //TODO FREE
-    // free(n_pre_calc.t[0]);
-    // free(n_pre_calc.t[1]);
-    // liberer_pre_calc(&res_a, choix, choix + 1);
-    // free(res_a.t[!choix]->t);
-    // free(res_a.t[!choix]);
-    // free(res_b.t[0]->t);
-    // free(res_b.t[0]);
-    // free(res_b.t[1]->t);
-    // free(res_b.t[1]);
+    liberer_deux_tab_l_pts(n_pre_calc);
+    liberer_deux_tab_l_pts(res_a);
+    liberer_deux_tab_l_pts(res_b);
+    free(n_pre_calc.t[0]);
+    free(n_pre_calc.t[1]);
+    free(res_a.t[0]->t);
+    free(res_a.t[0]);
+    free(res_a.t[1]->t);
+    free(res_a.t[1]);
+    free(res_b.t[0]->t);
+    free(res_b.t[0]);
+    free(res_b.t[1]->t);
+    free(res_b.t[1]);
     #if F_DEBUG > 1
         fprintf(stderr, "<(%ld %ld) (%ld %ld)\n",
                 depart.x, depart.y, arrive.x, arrive.y);
@@ -258,9 +274,16 @@ int main(int argc, char const *argv[]) {
                 print_result(res);
             #endif
             // ecrire_fichier(out, res); // tout doux
-            liberer_pre_calc(&pre_calc, 0, 2);
-            res.t[1]->len --;
-            liberer_pre_calc(&res, 0, 2);
+            liberer_deux_tab_l_pts(pre_calc);
+            free(pre_calc.t[0]->t);
+            free(pre_calc.t[0]);
+            free(pre_calc.t[1]->t);
+            free(pre_calc.t[1]);
+            liberer_deux_tab_l_pts(res);
+            free(res.t[0]->t);
+            free(res.t[0]);
+            free(res.t[1]->t);
+            free(res.t[1]);
             liberer_chemins(data);
             free(data);
         }
