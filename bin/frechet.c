@@ -244,12 +244,16 @@ void print_result(deux_tab_l_pts res) {
         printf("\t%ld %ld\n", i->x + 1, i->y + 1);
 }
 
-void ecrire_fichier(FILE *out, deux_tab_l_pts res) {
-    // fprintf(out, "%ld\n", res.t[1]->t[res.t[1]->len - 1].distance);
-    // fprintf(out, "%ld\n", res.t[1]->t[res.t[1]->len - 1].len);
-    // for(size_t i=0; i < res.t[1]->t[res.t[1]->len - 1].len; i++)
-    //     fprintf(out, "%ld %ld ", res.t[1]->t[res.t[1]->len - 1].t[i].x + 1,
-    //                            res.t[1]->t[res.t[1]->len - 1].t[i].y + 1);
+void ecrire_fichier(FILE *out, deux_tab_l_pts res) {;
+    l_pts* tete = res.t[1]->t[res.t[1]->len - 1];
+    fprintf(out, "%ld\n", tete->distance);
+    long d = 0;
+    for(l_pts* i = tete; i != NULL; i = i->n)
+        d++;
+    fprintf(out, "%ld\n", d);
+    char *s;
+    for(l_pts* j = res.t[1]->t[res.t[1]->len - 1]; j != NULL; j = j->n)
+        fprintf(out, "%ld %ld ", j->x + 1, j->y + 1);
 }
 
 
@@ -270,12 +274,12 @@ int main(int argc, char const *argv[]) {
             #if F_DEBUG >= 1
                 print_result(res);
             #endif
-            // char fname[128];
-            // strcpy(fname, argv[f]);
-            // strcat(fname, ".out"); //TODO remove .in
-            // FILE *out = fopen(fname, "w");
-            // ecrire_fichier(out, res);
-            // fclose(out);
+            char fname[128];
+            strcpy(fname, argv[f]);
+            strcat(fname, ".out"); //TODO remove .in
+            FILE *out = fopen(fname, "w");
+            ecrire_fichier(out, res);
+            fclose(out);
             liberer_deux_tab_l_pts(pre_calc);
             liberer_resultat(pre_calc);
             liberer_deux_tab_l_pts(res);
