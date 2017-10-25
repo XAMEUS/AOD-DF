@@ -26,6 +26,13 @@ void liberer_chemins(chemins *data) {
     free(data->t[1]);
 }
 
+void liberer_resultat(deux_tab_l_pts res) {
+    free(res.t[0]->t);
+    free(res.t[0]);
+    free(res.t[1]->t);
+    free(res.t[1]);
+}
+
 void liberer_tab_l_pts(l_pts **pp, size_t len) {
     for(size_t i = 0; i < len; i++) {
         for(l_pts *p = pp[i]; p != NULL; p = p->n) {
@@ -194,14 +201,8 @@ void frechet_recursif(chemins data,
     liberer_deux_tab_l_pts(res_b);
     free(n_pre_calc.t[0]);
     free(n_pre_calc.t[1]);
-    free(res_a.t[0]->t);
-    free(res_a.t[0]);
-    free(res_a.t[1]->t);
-    free(res_a.t[1]);
-    free(res_b.t[0]->t);
-    free(res_b.t[0]);
-    free(res_b.t[1]->t);
-    free(res_b.t[1]);
+    liberer_resultat(res_a);
+    liberer_resultat(res_b);
     #if F_DEBUG > 1
         fprintf(stderr, "<(%ld %ld) (%ld %ld)\n",
                 depart.x, depart.y, arrive.x, arrive.y);
@@ -273,22 +274,16 @@ int main(int argc, char const *argv[]) {
             #if F_DEBUG >= 1
                 print_result(res);
             #endif
-            char fname[128];
-            strcpy(fname, argv[f]);
-            strcat(fname, ".out"); //TODO remove .in
-            FILE *out = fopen(fname, "w");
-            ecrire_fichier(out, res);
-            fclose(out);
+            // char fname[128];
+            // strcpy(fname, argv[f]);
+            // strcat(fname, ".out"); //TODO remove .in
+            // FILE *out = fopen(fname, "w");
+            // ecrire_fichier(out, res);
+            // fclose(out);
             liberer_deux_tab_l_pts(pre_calc);
-            free(pre_calc.t[0]->t);
-            free(pre_calc.t[0]);
-            free(pre_calc.t[1]->t);
-            free(pre_calc.t[1]);
+            liberer_resultat(pre_calc);
             liberer_deux_tab_l_pts(res);
-            free(res.t[0]->t);
-            free(res.t[0]);
-            free(res.t[1]->t);
-            free(res.t[1]);
+            liberer_resultat(res);
             liberer_chemins(data);
             free(data);
         }
