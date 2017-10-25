@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Werror -std=c99 -g
+CFLAGS = -Werror -std=c99 -g -O3
 
 all: clean frechet
 

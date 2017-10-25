@@ -1,7 +1,7 @@
 #ifndef FRECHET
 #define FRECHET
 
-#define F_DEBUG 2
+#define F_DEBUG 0
 
 #define max(a,b) (((a)>(b))?(a):(b))
 #define min(a,b) (((a)<(b))?(a):(b))

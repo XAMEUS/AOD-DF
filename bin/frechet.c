@@ -2,6 +2,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include "frechet.h"
+#include <unistd.h>
 
 chemins *lire_fichier(FILE* fichier) {
     chemins *data = malloc(sizeof(chemins));
@@ -34,8 +35,8 @@ void liberer_resultat(deux_tab_l_pts res) {
 }
 
 void liberer_tab_l_pts(l_pts **pp, size_t len) {
-    for(size_t i = 0; i < len; i++) {
-        for(l_pts *p = pp[i]; p != NULL; p = p->n) {
+    for(size_t i = len; i > 0; i--) {
+        for(l_pts *p = pp[i-1]; p != NULL; p = p->n) {
             if(--p->cpt == 0)
                 while(!p->cpt) {
                     l_pts *n = p->n;
@@ -111,8 +112,8 @@ void frechet_iteratif(chemins data,
             sols[Y][X]->cpt++;
         }
     }
-    for(size_t j = 0; j < arrive.y - depart.y + 1; j++)
-        liberer_tab_l_pts(sols[j], arrive.x - depart.x + 1);
+    for(size_t j = arrive.y - depart.y + 1; j > 0 ; j--)
+        liberer_tab_l_pts(sols[j-1], arrive.x - depart.x + 1);
 }
 
 /*
@@ -165,10 +166,10 @@ void frechet_recursif(chemins data,
         n_arrive.y = n_depart.y;
     }
     deux_tab_l_pts res_a = {malloc(sizeof(tab_l_pts)),
-                            malloc(sizeof(tab_l_pts))}; //TODO voir
+                            malloc(sizeof(tab_l_pts))};
     frechet_recursif(data, depart, n_arrive, pre_calc, &res_a);
     deux_tab_l_pts n_pre_calc = {malloc(sizeof(tab_l_pts)),
-                                 malloc(sizeof(tab_l_pts))}; //TODO voir
+                                 malloc(sizeof(tab_l_pts))};
     n_pre_calc.t[choix]->len = res_a.t[choix]->len;
     n_pre_calc.t[choix]->t = res_a.t[choix]->t;
     n_pre_calc.t[!choix]->len = pre_calc.t[!choix]->len -
@@ -177,11 +178,8 @@ void frechet_recursif(chemins data,
     n_pre_calc.t[!choix]->t = pre_calc.t[!choix]->t +
                              choix * (n_depart.x - depart.x) +
                              !choix * (n_depart.y - depart.y);
-    for(int i = 0; i < 2; i++)
-        for (size_t j = 0; j < n_pre_calc.t[i]->len; j++)
-            n_pre_calc.t[i]->t[j]->cpt++;
     deux_tab_l_pts res_b = {malloc(sizeof(tab_l_pts)),
-                            malloc(sizeof(tab_l_pts))}; //TODO voir
+                            malloc(sizeof(tab_l_pts))};
     frechet_recursif(data, n_depart, arrive, n_pre_calc, &res_b);
     memcpy(res->t[!choix]->t,
            res_a.t[!choix]->t,
@@ -192,11 +190,9 @@ void frechet_recursif(chemins data,
     memcpy(res->t[choix]->t,
            res_b.t[choix]->t,
            sizeof(*res_b.t[choix]->t) * res_b.t[choix]->len);
-    for(size_t i = 0; i < res->t[0]->len; i++)
-        res->t[0]->t[i]->cpt++;
-    for(size_t i = 0; i < res->t[1]->len; i++)
-        res->t[1]->t[i]->cpt++;
-    liberer_deux_tab_l_pts(n_pre_calc);
+    for(size_t k = 0; k < 2; k++)
+        for(size_t i = 0; i < res->t[k]->len; i++)
+            res->t[k]->t[i]->cpt++;
     liberer_deux_tab_l_pts(res_a);
     liberer_deux_tab_l_pts(res_b);
     free(n_pre_calc.t[0]);
@@ -266,9 +262,9 @@ int main(int argc, char const *argv[]) {
             point depart = {0, 0};
             point arrive = {data->t[0]->len - 1, data->t[1]->len - 1};
             deux_tab_l_pts res = {malloc(sizeof(tab_l_pts)),
-                                     malloc(sizeof(tab_l_pts))}; //TODO voir
+                                     malloc(sizeof(tab_l_pts))};
             deux_tab_l_pts pre_calc = {malloc(sizeof(tab_l_pts)),
-                                          malloc(sizeof(tab_l_pts))}; //TODO voir
+                                          malloc(sizeof(tab_l_pts))};
             init_pre_calc(pre_calc, data);
             frechet_recursif(*data, depart, arrive, pre_calc, &res);
             #if F_DEBUG >= 1
