@@ -77,7 +77,7 @@ L'implémentation a l'avantage d'être économe en mémoire.
 
 La version itérative reçoit les deux chemins du fichier d'entrée, avec les deux points départ et arrivé, ainsi que les tableau précalculés et un pointeur vers le résultat (n.b. : voir le code source pour la documentation précise des fonctions).
 
-La fonction itérative a un coût asymptotique en nombre d'opération (qui se trouve dans la boucle principale : 12,67 instructions en moyenne) de : $ (Max_p - Min_p) * (Max_q - Min_q) = n^2$
+La fonction itérative a un coût asymptotique en nombre d'opération (qui se trouve dans la boucle principale : 12,67 instructions en moyenne) de : $ (Max_p - Min_p) * (Max_q - Min_q)$
 
 Le coût asymptotique en espace mémoire lors de l'exécution de la fonction itérative est : $ ((sizeof(l\_sols *) + sizeof(l\_sols)) * (Max_p - Min_p) * (Max_q - Min_q) $.
 
@@ -91,7 +91,7 @@ La différence se situe dans la longueur des chemins retournés, générés lors
 
 On suppose le cache suffisemment grand pour pouvoir contenir plusieurs lignes du tableau de calcul.
 
-Le nombre de défauts de cache dans la boucle principale est $(1 + \frac{6}{L})$. Au total $(n^2)$ défauts de cache.
+Le nombre de défauts de cache dans la boucle principale est $(1 + \frac{6}{L})$.
 
 \subsubsection*{Version récursive}
 
@@ -107,9 +107,23 @@ Le coût en nombre d'opérations :
 
 Le nombre de défauts de cache : $\Theta((Max_p - Min_p) + (Max_q - Min_q))$
 
+\subsubsection{total}
+Si l'on suppose que les parties itératives sont effectuées sur des blocs ayant le seuil (ie que len(P) = M^i et len(Q) = M^j): On a ij appels récursifs.
+
+La consomation en mémoire asymptotique : $ \Theta((M^i + M^j)*i*j)$
+
+Le coût en nombre d'opérations :
+
+- meilleur des cas : $\Theta((M^i + M^j)*i*j)$
+
+- pire des cas (cela dépend de la profondeur des élagage à faire lors de la libération des tableaux de résultats intermédiaires ) : $\Theta((M^i * M^j)*i*j)$
+
+Le nombre de défauts de cache : $\Theta((M^i + M^j)*i*j)$
+
+
 \subsection*{Question 7 - Analyse pratique}
 
-Sur un ordinateur avec Ubuntu 16.04, 8Go de RAM et un processeur i7, on observe les performances suivantes :
+Sur un ordinateur avec Ubuntu 16.04, 8Go de RAM et un i7-6500u, on observe les performances suivantes :
 
 \begin{tabular}{ | c | c | c | c |}
     \hline
