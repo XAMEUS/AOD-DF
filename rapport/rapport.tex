@@ -71,14 +71,16 @@ Voir le schéma :
 \includegraphics[]{scan.pdf}
 
 Au niveau de l'implémentation, les chemins sont représentés par des listes chaînées.
-%Chaque point du schéma est une structure contenant la distance de Fréchet jusqu'à ce point
 L'implémentation a l'avantage d'être économe en mémoire.
 
-La version itérative reçoit les deux chemins du fichier d'entrée, avec les deux points départ et arrivé, ainsi que les tableau précalculés et un pointeur vers le résultat.
+\subsubsection*{Version itérative}
 
-La fonction itérative a un coût asymptotique en nombre d'opération (se trouve dans la boucle principale : 12,67 instructions en moyenne) : $ (Max_p - Min_p) * (Max_q - Min_q) = n^2$
+La version itérative reçoit les deux chemins du fichier d'entrée, avec les deux points départ et arrivé, ainsi que les tableau précalculés et un pointeur vers le résultat (n.b. : voir le code source pour la documentation précise des fonctions).
+
+La fonction itérative a un coût asymptotique en nombre d'opération (qui se trouve dans la boucle principale : 12,67 instructions en moyenne) de : $ (Max_p - Min_p) * (Max_q - Min_q) = n^2$
 
 Le coût asymptotique en espace mémoire lors de l'exécution de la fonction itérative est : $ ((sizeof(l\_sols *) + sizeof(l\_sols)) * (Max_p - Min_p) * (Max_q - Min_q) $.
+
 À la fin de l'exécution, les tableaux servant à écrire le résultat sont déjà alloués, le coût mémoire est :
 
 - dans le meilleur des cas : $sizeof(l\_sols) * (Max_p - Min_p + Max_q - Min_q)$
@@ -90,6 +92,8 @@ La différence se situe dans la longueur des chemins retournés, générés lors
 On suppose le cache suffisemment grand pour pouvoir contenir plusieurs lignes du tableau de calcul.
 
 Le nombre de défauts de cache dans la boucle principale est $(1 + \frac{6}{L})$. Au total $(n^2)$ défauts de cache.
+
+\subsubsection*{Version récursive}
 
 Pour la version récusive (hors appel récursif):
 
@@ -105,6 +109,8 @@ Le nombre de défauts de cache : $\Theta((Max_p - Min_p) + (Max_q - Min_q))$
 
 \subsection*{Question 7 - Analyse pratique}
 
+Sur un ordinateur avec Ubuntu 16.04, 8Go de RAM et un processeur i7, on observe les performances suivantes :
+
 \begin{tabular}{ | c | c | c | c |}
     \hline
         benchmark& temps moyen d'éxécution (en s)& mémoire max utilisée (en Mo) & défauts de cache (Valgrind \%)\\ \hline\hline
@@ -115,6 +121,7 @@ Le nombre de défauts de cache : $\Theta((Max_p - Min_p) + (Max_q - Min_q))$
     \hline
  \end{tabular}
 
+ On a testé différents sueils pour trouver une une bonne valeur sur la machine testée (ici 1000).
 
 \begin{tabular}{ | c | c | c | c | c | c | }
  \hline
