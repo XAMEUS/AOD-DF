@@ -3,8 +3,11 @@
 
 #define F_DEBUG 0
 
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+
 #define max(a,b) (((a)>(b))?(a):(b))
-#define min(a,b) (((a)<(b))?(a):(b))
 #define dEC(a,b) (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)
 
 typedef struct point {

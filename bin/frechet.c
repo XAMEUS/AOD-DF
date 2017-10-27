@@ -1,8 +1,4 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
 #include "frechet.h"
-#include <unistd.h>
 
 chemins *lire_fichier(FILE* fichier) {
     chemins *data = malloc(sizeof(chemins));
@@ -88,6 +84,7 @@ void frechet_iteratif(chemins data,
             pre_calc.t[i]->t[j]->cpt++;
         }
     }
+    point tmp_x, tmp_y;
     for(size_t j = 1; j <= arrive.y - depart.y; j++)
         for(size_t i = 1; i <= arrive.x - depart.x; i++) {
             sols[j][i] = malloc(sizeof(*sols[j][i]));
@@ -98,9 +95,10 @@ void frechet_iteratif(chemins data,
                 sols[j][i]->n = sols[j][i-1];
             sols[j][i]->n->cpt++;
             sols[j][i]->cpt = 1;
+            tmp_x = data.t[0]->t[i + depart.x];
+            tmp_y = data.t[1]->t[j + depart.y];
             sols[j][i]->distance = max(sols[j][i]->n->distance,
-                                       dEC(data.t[0]->t[i + depart.x],
-                                           data.t[1]->t[j + depart.y]));
+                                       dEC(tmp_x, tmp_y));
             sols[j][i]->x = depart.x + i;
             sols[j][i]->y = depart.y + j;
         }
@@ -117,20 +115,7 @@ void frechet_iteratif(chemins data,
 }
 
 /*
-Le repère est selon (P, Q) avec Origine le point d'origine du parcours;
-Arguments:
-data        Les deux chemins du fichier d'entrée (data->t[0] pour P, 1 pour Q);
-depart      Pre_calc correspond à P = depart.x et Q = depart.y;
-arrive      Faire tourner l'alorithme jusqu'à P = arrive.x et Q = arrive.y;
-pre_calc    Valeurs précalculées:
-                pre_calc.t[0] est la ligne en bas
-                pre_calc.t[1] est la ligne à gauche
-                pre_calc.t[0]->t[0] est le point de départ
-                pre_calc.t[i]->len est ignoré;
-res         Valeurs de retour:
-                res->t[0] est la ligne en haut
-                res->t[1] est la ligne à droite
-                res->t[1]->t[res->t[1]->len - 1] est le point d'arrivée;
+Cette fonction a les mêmes arguments que la version itérative.
 */
 void frechet_recursif(chemins data,
                       point depart,
@@ -141,7 +126,7 @@ void frechet_recursif(chemins data,
     res->t[1]->len = arrive.y - depart.y + 1;
     res->t[0]->t = malloc(res->t[0]->len * sizeof(*res->t[0]->t));
     res->t[1]->t = malloc(res->t[1]->len * sizeof(*res->t[1]->t));
-    if(res->t[0]->len * res->t[1]->len < 300) {
+    if(res->t[0]->len * res->t[1]->len < 1000) {
         frechet_iteratif(data, depart, arrive, pre_calc, res);
         return;
     }
@@ -165,11 +150,11 @@ void frechet_recursif(chemins data,
         n_arrive.x = arrive.x;
         n_arrive.y = n_depart.y;
     }
-    deux_tab_l_pts res_a = {malloc(sizeof(tab_l_pts)),
-                            malloc(sizeof(tab_l_pts))};
+    deux_tab_l_pts res_a = {{malloc(sizeof(tab_l_pts)),
+                            malloc(sizeof(tab_l_pts))}};
     frechet_recursif(data, depart, n_arrive, pre_calc, &res_a);
-    deux_tab_l_pts n_pre_calc = {malloc(sizeof(tab_l_pts)),
-                                 malloc(sizeof(tab_l_pts))};
+    deux_tab_l_pts n_pre_calc = {{malloc(sizeof(tab_l_pts)),
+                                 malloc(sizeof(tab_l_pts))}};
     n_pre_calc.t[choix]->len = res_a.t[choix]->len;
     n_pre_calc.t[choix]->t = res_a.t[choix]->t;
     n_pre_calc.t[!choix]->len = pre_calc.t[!choix]->len -
@@ -178,8 +163,8 @@ void frechet_recursif(chemins data,
     n_pre_calc.t[!choix]->t = pre_calc.t[!choix]->t +
                              choix * (n_depart.x - depart.x) +
                              !choix * (n_depart.y - depart.y);
-    deux_tab_l_pts res_b = {malloc(sizeof(tab_l_pts)),
-                            malloc(sizeof(tab_l_pts))};
+    deux_tab_l_pts res_b = {{malloc(sizeof(tab_l_pts)),
+                            malloc(sizeof(tab_l_pts))}};
     frechet_recursif(data, n_depart, arrive, n_pre_calc, &res_b);
     memcpy(res->t[!choix]->t,
            res_a.t[!choix]->t,
@@ -244,16 +229,19 @@ void print_result(deux_tab_l_pts res) {
         printf("\t%ld %ld\n", i->x + 1, i->y + 1);
 }
 
+void ecrire_chemin(FILE *out, l_pts *p, long d) {
+    if (p->n == NULL)
+        fprintf(out, "%ld\n%ld %ld", d, p->x + 1, p->y + 1);
+    else {
+        ecrire_chemin(out, p->n, d + 1);
+        fprintf(out, " %ld %ld", p->x + 1, p->y + 1);
+    }
+}
+
 void ecrire_fichier(FILE *out, deux_tab_l_pts res) {;
     l_pts* tete = res.t[1]->t[res.t[1]->len - 1];
     fprintf(out, "%ld\n", tete->distance);
-    long d = 0;
-    for(l_pts* i = tete; i != NULL; i = i->n)
-        d++;
-    fprintf(out, "%ld\n", d);
-    char *s;
-    for(l_pts* j = res.t[1]->t[res.t[1]->len - 1]; j != NULL; j = j->n)
-        fprintf(out, "%ld %ld ", j->x + 1, j->y + 1);
+    ecrire_chemin(out, tete, 1);
 }
 
 
@@ -265,18 +253,28 @@ int main(int argc, char const *argv[]) {
             fclose(input);
             point depart = {0, 0};
             point arrive = {data->t[0]->len - 1, data->t[1]->len - 1};
-            deux_tab_l_pts res = {malloc(sizeof(tab_l_pts)),
-                                     malloc(sizeof(tab_l_pts))};
-            deux_tab_l_pts pre_calc = {malloc(sizeof(tab_l_pts)),
-                                          malloc(sizeof(tab_l_pts))};
+            deux_tab_l_pts res = {{malloc(sizeof(tab_l_pts)),
+                                     malloc(sizeof(tab_l_pts))}};
+            deux_tab_l_pts pre_calc = {{malloc(sizeof(tab_l_pts)),
+                                          malloc(sizeof(tab_l_pts))}};
             init_pre_calc(pre_calc, data);
             frechet_recursif(*data, depart, arrive, pre_calc, &res);
             #if F_DEBUG >= 1
                 print_result(res);
             #endif
-            char fname[128];
+            char fname[strlen(argv[f]) + 5];
             strcpy(fname, argv[f]);
-            strcat(fname, ".out"); //TODO remove .in
+            int offset = strlen(argv[f]);
+            for(int i = strlen(argv[f]) - 1; i >= 0; i--)
+                if(argv[f][i] == '.') {
+                    if ((fname[i+1] == 'i' &&
+                         fname[i+2] == 'n' &&
+                         fname[i+3] == '\0')
+                        || fname[i+1] == '\0')
+                        offset = i;
+                    break;
+                }
+            strcpy(fname + offset, ".out");
             FILE *out = fopen(fname, "w");
             ecrire_fichier(out, res);
             fclose(out);
