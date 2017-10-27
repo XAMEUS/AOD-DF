@@ -1,5 +1,16 @@
+/**
+ * @file doxygen_c.h
+ * @author Bouvier Pierre, Gourgoulhon Maxime
+ * @date 27 Oct 2017
+ * @brief Calcul de la distance de Frechet.
+ *
+ */
+
 #include "frechet.h"
 
+/**
+\brief Lecture des données dans un fichier et transformation en chemins.
+*/
 chemins *lire_fichier(FILE* fichier) {
     chemins *data = malloc(sizeof(chemins));
     data->t[0] = malloc(sizeof(tab_pts));
@@ -49,18 +60,17 @@ void liberer_deux_tab_l_pts(deux_tab_l_pts res) {
     liberer_tab_l_pts(res.t[0]->t, res.t[0]->len);
     liberer_tab_l_pts(res.t[1]->t, res.t[1]->len);
 }
-/*
-Le repère est selon (P, Q) avec Origine le point d'origine du parcours;
-Arguments:
-data        Les deux chemins du fichier d'entrée (data->t[0] pour P, 1 pour Q);
-depart      Pre_calc correspond à P = depart.x et Q = depart.y;
-arrive      Faire tourner l'alorithme jusqu'à P = arrive.x et Q = arrive.y;
-pre_calc    Valeurs précalculées:
+/*!
+\brief Le repère est selon (P, Q) avec Origine le point d'origine du parcours
+\param data        Les deux chemins du fichier d'entrée (data->t[0] pour P, 1 pour Q);
+\param depart      Pre_calc correspond à P = depart.x et Q = depart.y;
+\param arrive      Faire tourner l'alorithme jusqu'à P = arrive.x et Q = arrive.y;
+\param pre_calc    Valeurs précalculées:
                 pre_calc.t[0] est la ligne en bas
                 pre_calc.t[1] est la ligne à gauche
                 pre_calc.t[0]->t[0] est le point de départ
                 pre_calc.t[i]->len est ignoré;
-res         Valeurs de retour:
+\param res         Valeurs de retour:
                 res->t[0] est la ligne en haut
                 res->t[1] est la ligne à droite
                 res->t[1]->t[res->t[1]->len - 1] est le point d'arrivée;
@@ -114,7 +124,22 @@ void frechet_iteratif(chemins data,
         liberer_tab_l_pts(sols[j-1], arrive.x - depart.x + 1);
 }
 
-/*
+/*!
+\brief Le repère est selon (P, Q) avec Origine le point d'origine du parcours
+\param data        Les deux chemins du fichier d'entrée (data->t[0] pour P, 1 pour Q);
+\param depart      Pre_calc correspond à P = depart.x et Q = depart.y;
+\param arrive      Faire tourner l'alorithme jusqu'à P = arrive.x et Q = arrive.y;
+\param pre_calc    Valeurs précalculées:
+                pre_calc.t[0] est la ligne en bas
+                pre_calc.t[1] est la ligne à gauche
+                pre_calc.t[0]->t[0] est le point de départ
+                pre_calc.t[i]->len est ignoré;
+\param res         Valeurs de retour:
+                res->t[0] est la ligne en haut
+                res->t[1] est la ligne à droite
+                res->t[1]->t[res->t[1]->len - 1] est le point d'arrivée;
+                res->t[i]->t et res->t[i]->len doivent être initialisés
+
 Cette fonction a les mêmes arguments que la version itérative.
 */
 void frechet_recursif(chemins data,
@@ -190,6 +215,9 @@ void frechet_recursif(chemins data,
     #endif
 }
 
+/**
+\brief Initialise le tableau des chemins précalculés.
+*/
 void init_pre_calc(deux_tab_l_pts pre_calc, chemins *data) {
     pre_calc.t[0]->len = data->t[0]->len;
     pre_calc.t[0]->t = malloc(sizeof(*pre_calc.t[0]->t) * pre_calc.t[0]->len);
@@ -222,6 +250,9 @@ void init_pre_calc(deux_tab_l_pts pre_calc, chemins *data) {
     }
 }
 
+/**
+\brief Affiche les résultats (pour le debug)
+*/
 void print_result(deux_tab_l_pts res) {
     l_pts* tete = res.t[1]->t[res.t[1]->len - 1];
     printf("Distance: %ld\n", tete->distance);
@@ -229,6 +260,9 @@ void print_result(deux_tab_l_pts res) {
         printf("\t%ld %ld\n", i->x + 1, i->y + 1);
 }
 
+/**
+\brief Fonction récursive pour écrire les chemins
+*/
 void ecrire_chemin(FILE *out, l_pts *p, long d) {
     if (p->n == NULL)
         fprintf(out, "%ld\n%ld %ld", d, p->x + 1, p->y + 1);
@@ -238,13 +272,18 @@ void ecrire_chemin(FILE *out, l_pts *p, long d) {
     }
 }
 
+/**
+\brief Fonction pour écrire les résultats dans un fichier
+*/
 void ecrire_fichier(FILE *out, deux_tab_l_pts res) {;
     l_pts* tete = res.t[1]->t[res.t[1]->len - 1];
     fprintf(out, "%ld\n", tete->distance);
     ecrire_chemin(out, tete, 1);
 }
 
-
+/**
+\brief Main du programme, lis les fichiers et lance les calculs
+*/
 int main(int argc, char const *argv[]) {
     for(int f = 1; f < argc; f++) {
         FILE *input = fopen(argv[f], "r");

@@ -1,3 +1,11 @@
+/**
+ * @file doxygen_c.h
+ * @author Bouvier Pierre, Gourgoulhon Maxime
+ * @date 27 Oct 2017
+ * @brief Calcul de la distance de Frechet.
+ *
+ */
+
 #ifndef FRECHET
 #define FRECHET
 
